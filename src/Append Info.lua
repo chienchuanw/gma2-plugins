@@ -138,9 +138,50 @@ local function read_current_info(t)
     return info
 end
 
+-- ─── 自動安裝 macro ──────────────────────────────────────────
+-- 確保 macro pool 內有一顆與本 plugin 同名的 macro,內容即「執行本 plugin」。
+-- 流程:依名稱比對 → 已存在則跳過;不存在則在第一個空欄位建立。
+-- 讓使用者匯入 plugin 後,自動得到一顆可放上 executor 的 macro 按鈕。
+local function ensure_self_macro()
+    -- 1) 依名稱比對:列舉 macro pool,已有同名 macro 就跳過。
+    --    pool 根物件以 O.handle("Macro") 取得;amount/child 只會走訪「已存在」
+    --    的 macro,因此不受空欄位間隔影響。
+    local pool = call1(O.handle, "Macro")
+    if pool then
+        local n = call1(O.amount, pool) or 0
+        for i = 0, n - 1 do
+            local child = call1(O.child, pool, i)
+            if child and call1(O.name, child) == PLUGIN_TITLE then
+                dbg('macro "' .. PLUGIN_TITLE .. '" already exists, skip install')
+                return
+            end
+        end
+    end
+
+    -- 2) 找第一個空欄位(handle 取不到即視為空欄位)。
+    local slot
+    for i = 1, 10000 do
+        if not call1(O.handle, "Macro " .. i) then slot = i; break end
+    end
+    if not slot then dbg("no empty macro slot found"); return end
+
+    -- 3) 建立 macro 及其第一行內容。內容為呼叫本 plugin。
+    --    /cmd 外層已用雙引號,plugin 名稱含空白,內層改用單引號包住名稱。
+    --    (grandMA2 命令列接受單引號作為字串界定符;若某些主控台版本不吃,
+    --     可改成依 plugin 編號呼叫 "Plugin <num>"。)
+    gma.cmd(string.format('Store Macro %d', slot))
+    gma.cmd(string.format('Store Macro %d.1', slot))
+    gma.cmd(string.format([[Assign Macro %d.1 /cmd="Plugin '%s'"]], slot, PLUGIN_TITLE))
+    gma.cmd(string.format('Label Macro %d "%s"', slot, PLUGIN_TITLE))
+    feedback(string.format('%s: installed macro %d ("%s").', PLUGIN_TITLE, slot, PLUGIN_TITLE))
+end
+
 -- ─── 進入點 ───────────────────────────────────────────────────
 
 function Start()
+    -- 0) 首次執行時,自動在 macro pool 建立同名 macro(已存在則跳過)。
+    ensure_self_macro()
+
     -- 1) 選定 executor
     local exec = gma.user.getselectedexec()
     if not exec or exec == 0 then

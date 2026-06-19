@@ -168,21 +168,30 @@ function Start()
     local title  = string.format("Update Info - Seq %s Cue %s", S(t.seq_no), S(t.cue_no))
     local result = gma.textinput(title, current_info)
 
-    -- 5) 空字串 = 不動作(避免誤抹原值,亦無法可靠區分 Cancel)
-    if result == nil or result == "" then
-        feedback(PLUGIN_TITLE .. ": no change (empty input).")
+    -- 5) Cancel(回傳 nil)= 不動作。
+    --    ⚠ 注意:若主控台在按 Cancel 時回傳的是空字串而非 nil,
+    --       則 Cancel 也會被當成「清空 info」。請在實機確認 Cancel 的行為。
+    if result == nil then
+        feedback(PLUGIN_TITLE .. ": cancelled (no change).")
         return
     end
+
+    -- 沒變更就不寫
     if result == current_info then
         feedback(PLUGIN_TITLE .. ": info unchanged.")
         return
     end
 
-    -- 6) 寫回。雙引號會破壞 /info="..." 指令,改成單引號。
+    -- 6) 寫回。result 為空字串時即「清空」info。雙引號會破壞指令,改成單引號。
     local safe = result:gsub('"', "'")
     gma.cmd(string.format('Assign Sequence %s Cue %s /info="%s"', S(t.seq_no), S(t.cue_no), safe))
-    feedback(string.format('%s: Seq %s Cue %s info set to "%s"',
-        PLUGIN_TITLE, S(t.seq_no), S(t.cue_no), safe))
+    if result == "" then
+        feedback(string.format('%s: Seq %s Cue %s info cleared.',
+            PLUGIN_TITLE, S(t.seq_no), S(t.cue_no)))
+    else
+        feedback(string.format('%s: Seq %s Cue %s info set to "%s"',
+            PLUGIN_TITLE, S(t.seq_no), S(t.cue_no), safe))
+    end
 end
 
 function Cleanup()

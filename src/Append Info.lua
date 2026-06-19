@@ -1,6 +1,9 @@
--- Edit Cue Info
--- 讀取「目前選定 executor」當前 cue 的 Info 欄位,彈出輸入框(預填舊值)
--- 讓使用者編輯後寫回。UI 文字英文;註解中文。
+-- Append Info
+-- 讀取「目前選定 executor」當前 cue 的 Info 欄位,彈出「空白」輸入框讓使用者
+-- 輸入要追加的內容,並用 " / " 接在原本 info 後面寫回(append 模式)。
+-- 採 append 而非預填編輯,是因為 gma.textinput 會把預填文字整段反白,
+-- 一打字就覆蓋;空白輸入框 + 追加可避免這個問題。
+-- UI 文字英文;註解中文。
 -- 目標版本:grandMA2 3.9.60
 --
 -- 運作原理(經實機驗證):
@@ -19,13 +22,13 @@
 --     <CuePart .../>
 --   </Cue>
 
-local PLUGIN_TITLE = "Edit Cue Info"
+local PLUGIN_TITLE = "Append Info"
 
 -- 設 true 會把過程印到 System Monitor(除錯用)
 local DEBUG = false
 
 -- 匯出暫存檔名(每次覆蓋;用較獨特的名字避免撞到使用者的檔)
-local TMP_NAME = "edit_cue_info_tmp"
+local TMP_NAME = "append_info_tmp"
 
 local internal_name = select(1, ...)
 local visible_name  = select(2, ...)
@@ -164,24 +167,29 @@ function Start()
         return
     end
 
-    -- 4) 彈出輸入框(預填舊值)
-    local title  = string.format("Edit Info - Seq %s Cue %s", S(t.seq_no), S(t.cue_no))
-    local result = gma.textinput(title, current_info)
+    -- 4) 彈出「空白」輸入框,讓使用者輸入要追加的內容。
+    --    標題列顯示目前 info 作為參考(過長則截斷),但輸入框維持空白。
+    local shown = current_info
+    if #shown > 40 then shown = shown:sub(1, 40) .. "..." end
+    local title = string.format("Append to Info - Seq %s Cue %s%s",
+        S(t.seq_no), S(t.cue_no),
+        (current_info ~= "") and (" (now: " .. shown .. ")") or "")
+    local result = gma.textinput(title, "")
 
-    -- 5) 空字串 = 不動作(避免誤抹原值,亦無法可靠區分 Cancel)
+    -- 5) 空字串 = 不追加,直接結束
     if result == nil or result == "" then
         feedback(PLUGIN_TITLE .. ": no change (empty input).")
         return
     end
-    if result == current_info then
-        feedback(PLUGIN_TITLE .. ": info unchanged.")
-        return
-    end
 
-    -- 6) 寫回。雙引號會破壞 /info="..." 指令,改成單引號。
-    local safe = result:gsub('"', "'")
+    -- 6) 用 " / " 把新內容接在舊 info 後面(舊 info 為空則直接用新內容)
+    local SEP = " / "
+    local combined = (current_info == "") and result or (current_info .. SEP .. result)
+
+    -- 7) 寫回。雙引號會破壞 /info="..." 指令,改成單引號。
+    local safe = combined:gsub('"', "'")
     gma.cmd(string.format('Assign Sequence %s Cue %s /info="%s"', S(t.seq_no), S(t.cue_no), safe))
-    feedback(string.format('%s: Seq %s Cue %s info set to "%s"',
+    feedback(string.format('%s: Seq %s Cue %s info -> "%s"',
         PLUGIN_TITLE, S(t.seq_no), S(t.cue_no), safe))
 end
 

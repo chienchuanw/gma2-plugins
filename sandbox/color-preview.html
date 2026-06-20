@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>grandMA2 Color Preset 預覽（色相排序）</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px;
+    background: #15171c; color: #e7e9ee;
+    font-family: -apple-system, "PingFang TC", "Helvetica Neue", Arial, sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #8b909a; font-size: 13px; margin-bottom: 28px; }
+  h2 {
+    font-size: 14px; letter-spacing: .04em; color: #aab0bb;
+    border-bottom: 1px solid #2a2e37; padding-bottom: 8px; margin: 32px 0 16px;
+  }
+  .grid {
+    display: grid; gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  .card { background: #1d2027; border: 1px solid #2a2e37; border-radius: 10px; overflow: hidden; }
+  .swatch { height: 88px; width: 100%; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+  .meta { padding: 9px 11px 11px; }
+  .name { font-size: 14px; font-weight: 600; }
+  .num  { font-size: 11px; color: #7d828c; margin-top: 1px; }
+  .vals { font-size: 11px; color: #9aa0ab; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .tag { display: inline-block; font-size: 10px; padding: 1px 6px; margin-left: 6px; border-radius: 999px; background: #313641; color: #c6ccd6; vertical-align: middle; }
+  .tag.new { background: #2e4a2e; color: #b6f0b6; }
+</style>
+</head>
+<body>
+  <h1>grandMA2 Color Preset 起始表 — 色相排序預覽（42 色）</h1>
+  <div class="sub">色塊為 RGB 加色近似（CMY 燈由互補值自動換算）。Amber emitter 一律 0；White emitter 僅 RGBW=100。數值 0–100%。NEW＝本輪新增。</div>
+  <div id="root"></div>
+
+<script>
+const groups = [
+  { title: "中性 / 控溫  ·  4.1–4.6", items: [
+    ["4.1","White",100,100,100,"W0"],
+    ["4.2","RGBW",100,100,100,"W100"],
+    ["4.3","Black",0,0,0,null],
+    ["4.4","CTO",100,75,45,null],
+    ["4.5","Deep CTO",100,58,22,null],
+    ["4.6","CTB",72,86,100,null],
+  ]},
+  { title: "粉彩  ·  4.11–4.19  （色相排序）", items: [
+    ["4.11","Light Red",100,64,58,null],
+    ["4.12","Light Orange",100,80,55,null],
+    ["4.13","Straw",100,88,50,"new"],
+    ["4.14","Light Yellow",100,97,70,null],
+    ["4.15","Light Green",70,100,70,null],
+    ["4.16","Light Cyan",65,100,95,null],
+    ["4.17","Light Blue",64,80,100,null],
+    ["4.18","Light Pink",100,74,84,null],
+    ["4.19","Sakura",100,80,88,null],
+  ]},
+  { title: "飽和  ·  4.21–4.47  （色相排序）", items: [
+    ["4.21","Red",100,0,0,null],
+    ["4.22","Red Orange",100,25,0,null],
+    ["4.23","Orange",100,45,0,null],
+    ["4.24","Amber",100,55,0,null],
+    ["4.25","Deep Yellow",100,80,0,"new"],
+    ["4.26","Yellow",100,100,0,"new"],
+    ["4.27","Lime",75,100,0,"new"],
+    ["4.28","Fern Green",55,80,20,null],
+    ["4.29","Neon Green",55,100,0,null],
+    ["4.30","Green",0,100,0,null],
+    ["4.31","Forest",10,55,18,null],
+    ["4.32","Sea Green",15,80,55,null],
+    ["4.33","Teal",0,70,70,"new"],
+    ["4.34","Cyan",0,100,100,null],
+    ["4.35","Azure",0,70,100,"new"],
+    ["4.36","Cobalt",0,40,100,"new"],
+    ["4.37","Blue",0,0,100,null],
+    ["4.38","Congo",15,0,65,"new"],
+    ["4.39","Lavender",70,55,100,null],
+    ["4.40","Indigo",30,0,85,null],
+    ["4.41","Violet",55,0,100,null],
+    ["4.42","Purple",65,0,85,null],
+    ["4.43","Magenta",100,0,100,null],
+    ["4.44","Purple Magenta",85,0,80,null],
+    ["4.45","Pink",100,35,65,null],
+    ["4.46","Deep Pink",100,10,50,null],
+    ["4.47","Pink Red",100,15,30,null],
+  ]},
+];
+
+const to255 = v => Math.round(v * 2.55);
+const root = document.getElementById("root");
+
+for (const g of groups) {
+  const h = document.createElement("h2");
+  h.textContent = g.title;
+  root.appendChild(h);
+  const grid = document.createElement("div");
+  grid.className = "grid";
+  for (const [num, name, r, gr, b, tag] of g.items) {
+    const R = to255(r), G = to255(gr), B = to255(b);
+    const card = document.createElement("div");
+    card.className = "card";
+    let tagHtml = "";
+    if (tag === "new") tagHtml = '<span class="tag new">NEW</span>';
+    else if (tag) tagHtml = '<span class="tag">'+tag+'</span>';
+    card.innerHTML =
+      '<div class="swatch" style="background: rgb('+R+','+G+','+B+')"></div>' +
+      '<div class="meta">' +
+        '<div class="name">'+name+tagHtml+'</div>' +
+        '<div class="num">Preset '+num+'</div>' +
+        '<div class="vals">R'+r+' G'+gr+' B'+b+'  ·  '+R+','+G+','+B+'</div>' +
+      '</div>';
+    grid.appendChild(card);
+  }
+  root.appendChild(grid);
+}
+</script>
+</body>
+</html>

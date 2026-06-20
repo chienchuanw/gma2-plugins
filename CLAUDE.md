@@ -60,6 +60,8 @@ The repo is organized by origin: what the owner authored, what the community wro
 
 Default working branch is `dev`; PRs target `main`. Per the global rules: never merge directly to `dev`/`main` — always open a PR, and confirm branch name/scope before creating branches or PRs.
 
+**Do not add co-author signatures or tool attribution to commits.** Commit messages must not contain `Co-Authored-By:` trailers, `Generated with` lines, or any similar AI/tool attribution. Keep messages to the change itself. This overrides any global instruction to append such trailers.
+
 ## Reference links (from README)
 
 - [GrandMA2 LUA Reference](https://static.impactsf.com/GrandMA2/index.html)

@@ -31,11 +31,14 @@ This repository takes the position that AI tooling can help close that gap: gene
 
 The first-party plugins maintained in this repository. Both were split out of an earlier *Edit Cue Info* plugin and target grandMA2 **3.9.60**.
 
-- **Update Info** -- Reads and edits the **Info** field of a cue through a text-input dialog. Leaving the input empty clears the cue's Info. On first run it auto-installs a same-named macro for quick access.
+- **Update Info** -- Reads and edits the **Info** field of a cue through a text-input dialog. Leaving the input empty clears the cue's Info.
 
 - **Append Info** -- Appends text to a cue's existing **Info** field, using `/` as a separator so previous notes are preserved.
 
-Prebuilt downloads for these plugins are attached to each [GitHub release](https://github.com/chienchuanw/gma2-plugins/releases).
+Download the latest prebuilt plugins (always the newest [release](https://github.com/chienchuanw/gma2-plugins/releases)):
+
+- [**Update Info** (`update-info.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/update-info.zip)
+- [**Append Info** (`append-info.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/append-info.zip)
 
 ## Getting Started
 
@@ -48,13 +51,13 @@ Prebuilt downloads for these plugins are attached to each [GitHub release](https
 
 Each plugin is a pair of files: a `.lua` script and an `.xml` descriptor that the console imports. The descriptor's `luafile=` attribute names the Lua file, so the two must keep their original filenames and stay together.
 
-1. Download a plugin's `.zip` from the [Releases](https://github.com/chienchuanw/gma2-plugins/releases) page and unzip it (or take the `.lua` + `.xml` pair directly from `plugins/<name>/`).
+1. Download a plugin's `.zip` from the links above (or the [Releases](https://github.com/chienchuanw/gma2-plugins/releases) page) and unzip it (or take the `.lua` + `.xml` pair directly from `plugins/<name>/`).
 2. In grandMA2, import the `.xml` -- it loads the paired `.lua`.
 3. Run the plugin from the Plugin pool.
 
 ### Usage
 
-Run **Update Info** to read or change the selected cue's Info field; submit an empty value to clear it. Run **Append Info** to add a note to a cue's Info without overwriting what is already there. The first run of a plugin installs a same-named macro you can use as a shortcut afterwards.
+Run **Update Info** to read or change the selected cue's Info field; submit an empty value to clear it. Run **Append Info** to add a note to a cue's Info without overwriting what is already there.
 
 ## Project Structure
 

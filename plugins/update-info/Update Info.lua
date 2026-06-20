@@ -82,23 +82,37 @@ end
 
 -- 從匯出的 sequence XML 中,解析出指定 cue 的 info 文字。
 -- 找不到對應 cue 或該 cue 無 info → 回傳 ""。
+-- 注意:'<Info%s' 要求 Info 後接空白,以排除 <InfoItems>
+local function extract_info(block)
+    return xml_unescape(block:match('<Info%s[^>]*>(.-)</Info>')) or ""
+end
+
 local function parse_cue_info(xml, cue_no)
     local target = tonumber(cue_no)
-    if not target then return "" end
 
     -- 移除自閉合的占位 cue(<Cue xsi:nil="true" />),避免 cue 區塊配對錯亂
     xml = xml:gsub('<Cue%s+xsi:nil="true"%s*/>', '')
 
+    -- 一邊依 cue 號比對,一邊記錄「唯一一顆 cue」供後備使用。
+    local only_block, count = nil, 0
     for block in xml:gmatch('<Cue.-</Cue>') do
-        local n, sub = block:match('<Number%s+number="(%-?%d+)"%s+sub_number="(%-?%d+)"')
-        if n and sub then
-            local num = tonumber(n) + tonumber(sub) / 1000
-            if math.abs(num - target) < 0.0005 then
-                -- 注意:用 '<Info%s' 要求 Info 後接空白,以排除 <InfoItems>
-                local info = block:match('<Info%s[^>]*>(.-)</Info>')
-                return xml_unescape(info) or ""
+        count = count + 1
+        only_block = block
+        if target then
+            local n, sub = block:match('<Number%s+number="(%-?%d+)"%s+sub_number="(%-?%d+)"')
+            if n and sub then
+                local num = tonumber(n) + tonumber(sub) / 1000
+                if math.abs(num - target) < 0.0005 then
+                    return extract_info(block)
+                end
             end
         end
+    end
+
+    -- 後備:單 cue 匯出時檔內只有一顆 cue,即使號碼對不上也直接採用它。
+    -- (整序列匯出有多顆 cue 時不會觸發,故不影響原行為。)
+    if count == 1 and only_block then
+        return extract_info(only_block)
     end
     return ""
 end

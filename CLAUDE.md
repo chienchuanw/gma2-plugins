@@ -26,7 +26,7 @@ The Lua file contract:
 - Receives its names as varargs: `local internal_name = select(1,...)`, `local visible_name = select(2,...)`.
 - **Must `return Start, Cleanup`** at the end of the file. `Start` is the entry point invoked when the plugin runs; `Cleanup` is optional and runs on termination.
 
-See `plugins/plugin_1.lua` for a canonical minimal example — its trailing comment block is the most complete reference for the `gma.*` API surface available (no official API docs exist publicly).
+See `reference/ma-samples/plugin_1.lua` for a canonical minimal example — its trailing comment block is the most complete reference for the `gma.*` API surface available (no official API docs exist publicly).
 
 ## The `gma.*` API
 
@@ -41,15 +41,19 @@ Performance idiom seen across plugins: alias a frequently-used function block lo
 
 ## Layout
 
-- `src/` — **the active development area**. Working plugin sources, each as a `.lua`+`.xml` pair (e.g. `color.lua`, `Recast Preset`, large community plugins like `LayoutFX_MAte`, `MIDI-Twister Encoders`, `Presets_to_Offsets`).
-- `plugins/` — grandMA2 **official** sample/reference material:
-  - `plugin_1.lua` / `plugin_1.xml` — the official demo + API reference.
-  - `export-plugin.lua` — empty scaffold (`-- fill lua code here`).
+The repo is organized by origin: what the owner authored, what the community wrote, and official reference material.
+
+- `plugins/` — **first-party plugins** (the active development area), one folder per plugin, each a `.lua`+`.xml` pair:
+  - `update-info/` — read/edit a cue's Info field (empty input clears it).
+  - `append-info/` — append text to a cue's Info field, `/`-separated.
+- `third-party/` — community plugins kept for study and attribution, one folder each, holding **both** the extracted `.lua`/`.xml` source and the author's original archive (`.zip`/`.rar`): `layoutfx/`, `midi-twister/`, `presets-to-offsets/`, `recast-preset/`. Not owner-licensed — see `THIRD-PARTY-NOTICES.md`.
+- `reference/` — read-only material:
+  - `ma-samples/` — grandMA2 **official** demo: `plugin_1.lua`/`plugin_1.xml` (the demo + API reference) and `export-plugin.lua` (empty scaffold, `-- fill lua code here`).
   - `systemtests/` — 371 official MA self-test scripts plus the harness in `test_main_matrix.lua` (`RegisterTestScript` / `StartSingleTestScript` / `get_prop_fixturecount`). These test the *console*, not this repo — treat as read-only reference for command syntax and object behavior.
-  - `requirements/socket/` — LuaSocket library (`http.lua`, `smtp.lua`, `ltn12.lua`, etc.) bundled as a dependency for plugins that need networking.
-- `custom-plugins/` — community plugins as **binary archives** (`.rar`/`.zip`); not directly editable. `src/` holds the extracted/working versions of some of these.
-- `compressed/` — archived copies of plugin releases.
-- `docs/` — Lua tutorial PDFs (Setup, Variables, Tables, Control, Functions).
+  - `socket/` — LuaSocket library (`http.lua`, `smtp.lua`, `ltn12.lua`, etc.) bundled as a dependency for plugins that need networking.
+  - `lua-lessons/` — Lua tutorial PDFs (Setup, Variables, Tables, Control, Functions).
+- `sandbox/` — unfinished experiments (e.g. `color.lua`, which has no `.xml` yet).
+- `scripts/` — `build-release.sh` packages each `plugins/<name>/` pair into `dist/<name>.zip` for GitHub releases (`dist/` is gitignored).
 - `images/` — README screenshots.
 
 ## Git workflow

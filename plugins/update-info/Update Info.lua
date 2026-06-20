@@ -116,16 +116,20 @@ local function read_current_info(t)
     --  執行後選定碟會停在內建碟。)
     gma.cmd("SelectDrive 1")
 
-    os.remove(full)  -- 先刪舊檔,避免 Export 跳「覆蓋?」對話框
-    gma.cmd(string.format('Export Sequence %s "%s"', S(t.seq_no), TMP_NAME))
+    os.remove(full)  -- 先刪舊檔,確保讀到的是這次新匯出的內容
+    -- 只匯出「這一顆 cue」,而非整條 sequence:輸出檔極小,不受 showfile
+    -- 大小影響,進度條幾乎消失。/nc = no-confirm,略過覆蓋確認對話框。
+    gma.cmd(string.format('Export Sequence %s Cue %s "%s" /nc', S(t.seq_no), S(t.cue_no), TMP_NAME))
 
     -- 重要:gma.cmd 是非同步的,命令要等 plugin yield(gma.sleep)時才被處理。
-    -- 因此這裡輪詢等待匯出檔「出現且寫入完整」(含結尾 </Sequ>),最多約 2 秒。
+    -- 因此這裡輪詢等待匯出檔「出現且寫入完整」,最多約 2 秒。
+    -- 完成標記用最外層的 </MA>:所有 MA 匯出 XML 都包在 <MA>...</MA>,
+    -- 比 </Sequ> 通用,不受匯出對象種類影響(單 cue 匯出亦適用)。
     local xml
     for _ = 1, 40 do
         gma.sleep(0.05)
         local c = read_file(full)
-        if c and c:find("</Sequ>", 1, true) then xml = c; break end
+        if c and c:find("</MA>", 1, true) then xml = c; break end
     end
     if not xml then dbg("could not read/complete " .. full); return nil end
 

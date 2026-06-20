@@ -139,38 +139,73 @@ end
 -- 確保 macro pool 內有一顆與本 plugin 同名的 macro,內容即「執行本 plugin」。
 -- 流程:依名稱比對 → 已存在則跳過;不存在則在第一個空欄位建立。
 -- 讓使用者匯入 plugin 後,自動得到一顆可放上 executor 的 macro 按鈕。
-local function ensure_self_macro()
-    -- 1) 依名稱比對:列舉 macro pool,已有同名 macro 就跳過。
-    --    pool 根物件以 O.handle("Macro") 取得;amount/child 只會走訪「已存在」
-    --    的 macro,因此不受空欄位間隔影響。
-    local pool = call1(O.handle, "Macro")
-    if pool then
-        local n = call1(O.amount, pool) or 0
-        for i = 0, n - 1 do
-            local child = call1(O.child, pool, i)
-            if child and call1(O.name, child) == PLUGIN_TITLE then
-                dbg('macro "' .. PLUGIN_TITLE .. '" already exists, skip install')
-                return
-            end
+
+-- 同一輪掃描 macro pool,回傳 (同名 macro 的編號或 nil, 第一個空欄位或 nil)。
+-- 用 O.handle("Macro <i>")(帶編號)逐一查;這是可靠的單一 macro 取得方式。
+-- 走訪到「連續空欄位」夠多即停,避免空轉一萬次(本 plugin 建立的 macro 一定
+-- 落在最前面的空欄位,因此排列在前段,不會被提早中止漏掉)。
+local function scan_macros(target_name)
+    local existing, empty, consec_empty = nil, nil, 0
+    for i = 1, 10000 do
+        local h = call1(O.handle, "Macro " .. i)
+        if h then
+            consec_empty = 0
+            if not existing and call1(O.name, h) == target_name then existing = i end
+        else
+            if not empty then empty = i end
+            consec_empty = consec_empty + 1
+            if empty and consec_empty >= 50 then break end
         end
     end
+    return existing, empty
+end
 
-    -- 2) 找第一個空欄位(handle 取不到即視為空欄位)。
-    local slot
-    for i = 1, 10000 do
-        if not call1(O.handle, "Macro " .. i) then slot = i; break end
+-- 找出本 plugin 自己在 Plugin pool 的編號(依名稱比對)。找不到回 nil。
+-- 用編號呼叫(Plugin <n>)可避開「名稱含空白需引號、而引號在 macro
+-- command 內是特殊字元」的問題。
+local function find_self_plugin_no()
+    local want = visible_name or PLUGIN_TITLE
+    local consec_empty = 0
+    for i = 1, 1000 do
+        local h = call1(O.handle, "Plugin " .. i)
+        if h then
+            consec_empty = 0
+            if call1(O.name, h) == want then return i end
+        else
+            consec_empty = consec_empty + 1
+            if consec_empty >= 50 then break end
+        end
+    end
+    return nil
+end
+
+local function ensure_self_macro()
+    -- 1) 已存在同名 macro → 跳過。
+    local existing, slot = scan_macros(PLUGIN_TITLE)
+    if existing then
+        dbg(string.format('macro "%s" already exists at %d, skip install', PLUGIN_TITLE, existing))
+        return
     end
     if not slot then dbg("no empty macro slot found"); return end
 
-    -- 3) 建立 macro 及其第一行內容。內容為呼叫本 plugin。
-    --    /cmd 外層已用雙引號,plugin 名稱含空白,內層改用單引號包住名稱。
-    --    (grandMA2 命令列接受單引號作為字串界定符;若某些主控台版本不吃,
-    --     可改成依 plugin 編號呼叫 "Plugin <num>"。)
+    -- 2) 以「plugin 編號」組指令,避開引號問題。找不到自身編號就不建立
+    --    (不要產生壞掉的空 macro)。
+    local pno = find_self_plugin_no()
+    if not pno then
+        dbg("could not resolve own plugin number; skip macro install")
+        return
+    end
+    local invoke = "Plugin " .. pno
+
+    -- 3) 建立 macro、其第一行內容、標籤,然後讓非同步指令 flush。
+    --    macro 內容只用 invoke(無引號、無空白),不會撞到 macro command 語法。
     gma.cmd(string.format('Store Macro %d', slot))
     gma.cmd(string.format('Store Macro %d.1', slot))
-    gma.cmd(string.format([[Assign Macro %d.1 /cmd="Plugin '%s'"]], slot, PLUGIN_TITLE))
+    gma.cmd(string.format('Assign Macro %d.1 /cmd="%s"', slot, invoke))
     gma.cmd(string.format('Label Macro %d "%s"', slot, PLUGIN_TITLE))
-    feedback(string.format('%s: installed macro %d ("%s").', PLUGIN_TITLE, slot, PLUGIN_TITLE))
+    gma.sleep(0.05)
+    feedback(string.format('%s: installed macro %d -> %s ("%s").',
+        PLUGIN_TITLE, slot, invoke, PLUGIN_TITLE))
 end
 
 -- ─── 進入點 ───────────────────────────────────────────────────

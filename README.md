@@ -127,7 +127,7 @@ The Lua tutorial PDFs under `reference/lua-lessons/` cover setup, variables, tab
 
 grandMA2 runs only on Windows. The latest version at the time of writing is 3.9.60.91; you can get the console and onPC software from the [official download page](https://www.malighting.com/downloads/products/grandma2/).
 
-![grandMA2 download page](images/Screenshot%202025-07-01%20at%2010.20.30%E2%80%AFAM.png)
+![grandMA2 download page](images/grandma2-download-page.png)
 
 ## Contributing
 

@@ -1,0 +1,5 @@
+# macOS
+.DS_Store
+
+# Release build output
+/dist/

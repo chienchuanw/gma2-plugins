@@ -29,16 +29,19 @@ This repository takes the position that AI tooling can help close that gap: gene
 
 ## Features
 
-The first-party plugins maintained in this repository. Both were split out of an earlier *Edit Cue Info* plugin and target grandMA2 **3.9.60**.
+The first-party plugins maintained in this repository, all targeting grandMA2 **3.9.60**. *Update Info* and *Append Info* were split out of an earlier *Edit Cue Info* plugin.
 
 - **Update Info** -- Reads and edits the **Info** field of a cue through a text-input dialog. Leaving the input empty clears the cue's Info.
 
 - **Append Info** -- Appends text to a cue's existing **Info** field, using `/` as a separator so previous notes are preserved.
 
+- **Create Punch** -- Stores the selected fixtures at full into the current cue, then inserts a blackout cue right after it (same fixtures at 0) with a prompted fade time, building a punch/bump in two cues.
+
 Download the latest prebuilt plugins (always the newest [release](https://github.com/chienchuanw/gma2-plugins/releases)):
 
 - [**Update Info** (`update-info.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/update-info.zip)
 - [**Append Info** (`append-info.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/append-info.zip)
+- [**Create Punch** (`create-punch.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/create-punch.zip)
 
 ## Getting Started
 
@@ -57,7 +60,7 @@ Each plugin is a pair of files: a `.lua` script and an `.xml` descriptor that th
 
 ### Usage
 
-Run **Update Info** to read or change the selected cue's Info field; submit an empty value to clear it. Run **Append Info** to add a note to a cue's Info without overwriting what is already there.
+Run **Update Info** to read or change the selected cue's Info field; submit an empty value to clear it. Run **Append Info** to add a note to a cue's Info without overwriting what is already there. Run **Create Punch** with fixtures selected and an executor running a cue: it stores them at full into the current cue, asks for a fade time (empty defaults to 1 second), and writes a blackout cue just after the current one with those fixtures fading to 0.
 
 ## Project Structure
 
@@ -65,7 +68,8 @@ Run **Update Info** to read or change the selected cue's Info field; submit an e
 gma2-plugins/
 ├── plugins/                  # First-party plugins (one folder per plugin)
 │   ├── update-info/          #   Update Info.lua + Update Info.xml
-│   └── append-info/          #   Append Info.lua + Append Info.xml
+│   ├── append-info/          #   Append Info.lua + Append Info.xml
+│   └── create-punch/         #   Create Punch.lua + Create Punch.xml
 ├── third-party/              # Community plugins, kept for study and attribution
 │   ├── layoutfx/             #   extracted source + original archive
 │   ├── midi-twister/

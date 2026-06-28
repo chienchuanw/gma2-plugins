@@ -18,8 +18,11 @@
 --        Store Sequence <n> Cue <current> /merge /nc
 --        At 0
 --        Store Sequence <n> Cue <zero> Fade <seconds> /merge /nc
+--        Assign Sequence <n> Cue <zero> /trig=time /trigTime=0
 --        ClearAll
 --      撞號一律靜默 merge,不覆蓋既有 cue 的其他內容。
+--      零號 cue 的 trigger 設為 time、trigTime=0:GO 完當前 cue 後它會立刻
+--      自動接續觸發,把選定燈具在 <seconds> 秒內淡降到 0(punch 後自動 release)。
 
 local PLUGIN_TITLE = "Create Punch"
 
@@ -178,9 +181,11 @@ function Start()
         "Store Sequence %s Cue %s /merge /nc; " ..
         "At 0; " ..
         "Store Sequence %s Cue %s Fade %s /merge /nc; " ..
+        "Assign Sequence %s Cue %s /trig=time /trigTime=0; " ..
         "ClearAll",
         S(t.seq_no), cur_cue,
-        S(t.seq_no), zero_cue, fade_str)
+        S(t.seq_no), zero_cue, fade_str,
+        S(t.seq_no), zero_cue)
     dbg("cmd = " .. cmd)
     gma.cmd(cmd)
 

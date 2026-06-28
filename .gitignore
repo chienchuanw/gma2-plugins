@@ -3,3 +3,6 @@
 
 # Release build output
 /dist/
+
+# temp (local scratch: exported showfile samples, etc.)
+/tmp/

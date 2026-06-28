@@ -37,11 +37,14 @@ The first-party plugins maintained in this repository, all targeting grandMA2 **
 
 - **Create Punch** -- Stores the selected fixtures at full into the current cue, then inserts a blackout cue right after it (same fixtures at 0) with a prompted fade time, building a punch/bump in two cues.
 
+- **Correct Position Offset** -- Bakes the difference between two Position presets into each fixture instance's Pan/Tilt offset. Enter an "original" and a "corrected" preset; for every fixture instance in both, it adds `corrected - original` to the current offset. Handles multi-instance fixtures (e.g. ACME Tornado TB5: `.1 .3 .5 .7 .9`), not just the first instance.
+
 Download the latest prebuilt plugins (always the newest [release](https://github.com/chienchuanw/gma2-plugins/releases)):
 
 - [**Update Info** (`update-info.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/update-info.zip)
 - [**Append Info** (`append-info.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/append-info.zip)
 - [**Create Punch** (`create-punch.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/create-punch.zip)
+- [**Correct Position Offset** (`correct-position-offset.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/correct-position-offset.zip)
 
 ## Getting Started
 
@@ -60,7 +63,7 @@ Each plugin is a pair of files: a `.lua` script and an `.xml` descriptor that th
 
 ### Usage
 
-Run **Update Info** to read or change the selected cue's Info field; submit an empty value to clear it. Run **Append Info** to add a note to a cue's Info without overwriting what is already there. Run **Create Punch** with fixtures selected and an executor running a cue: it stores them at full into the current cue, asks for a fade time (empty defaults to 1 second), and writes a blackout cue just after the current one with those fixtures fading to 0.
+Run **Update Info** to read or change the selected cue's Info field; submit an empty value to clear it. Run **Append Info** to add a note to a cue's Info without overwriting what is already there. Run **Create Punch** with fixtures selected and an executor running a cue: it stores them at full into the current cue, asks for a fade time (empty defaults to 1 second), and writes a blackout cue just after the current one with those fixtures fading to 0. Run **Correct Position Offset** after re-focusing a rig into a corrected Position preset: enter the original and corrected preset numbers and it adds the per-instance Pan/Tilt difference into each fixture's offset, so existing cues using the original preset point correctly.
 
 ## Project Structure
 
@@ -69,7 +72,8 @@ gma2-plugins/
 ├── plugins/                  # First-party plugins (one folder per plugin)
 │   ├── update-info/          #   Update Info.lua + Update Info.xml
 │   ├── append-info/          #   Append Info.lua + Append Info.xml
-│   └── create-punch/         #   Create Punch.lua + Create Punch.xml
+│   ├── create-punch/         #   Create Punch.lua + Create Punch.xml
+│   └── correct-position-offset/  # Correct Position Offset.lua + .xml
 ├── third-party/              # Community plugins, kept for study and attribution
 │   ├── layoutfx/             #   extracted source + original archive
 │   ├── midi-twister/

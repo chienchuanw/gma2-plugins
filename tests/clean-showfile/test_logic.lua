@@ -33,6 +33,11 @@ end
 eq(M.prompt_text("macros", 14), "Delete all 14 macros?", "prompt with count")
 eq(M.prompt_text("presets", 1), "Delete all 1 presets?", "prompt singular count still works")
 
+-- ── classify_answer: X/close aborts, Yes selects, No skips ──
+eq(M.classify_answer(nil), "abort", "closing dialog (nil) aborts whole plugin")
+eq(M.classify_answer(true), "select", "Yes marks pool for deletion")
+eq(M.classify_answer(false), "skip", "No skips this pool and continues")
+
 -- ── delete_commands: one 'Thru /nc' per normal pool ──
 local mac = M.delete_commands(M.POOLS[1])         -- macro
 eq(#mac, 1, "macro → one command")

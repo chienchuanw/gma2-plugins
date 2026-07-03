@@ -3,27 +3,26 @@
 -- 先收集所有答案,最後一次確認後才批次刪除。UI 文字英文;註解中文。
 -- 目標版本:grandMA2 3.9.60
 --
--- 設計(經 /grill-me 討論定案,兩輪實機測試後修正):
+-- 設計(經 /grill-me 討論定案,多輪實機測試後修正):
 --   1) 走訪固定、精選的「programming content」pool(不含 Patch/Fixtures/DMX)。
---   2) 每個 pool 每次執行都即時計數,並用 gma.textinput 詢問一次:
---        「Delete all <n> <label>?  (yes / no / cancel)」  預填 "no"。
---      yes = 標記待刪;no(或 Enter / 空白)= 略過此 pool;cancel = 中止整個 plugin。
+--   2) 每個 pool 每次執行都即時計數,並用 gma.gui.confirm 按鈕對話框詢問一次:
+--        「Delete all <n> <label>?」  按 Yes = 標記待刪;按 No / 關閉 = 略過此 pool。
 --   3) 收集所有答案(collect-then-execute),過程中不刪任何東西。
---   4) 若全部沒選 → 安靜結束;否則顯示總結確認(OK = 執行,Cancel = 中止)。
+--   4) 若全部沒選 → 安靜結束;否則顯示總結確認,按 Cancel 即中止(這是唯一的中止出口)。
 --   5) 確認後才批次執行 Delete;/nc 略過主控台自身的刪除確認框。
 --   6) 刪除後把摘要 echo 到 System Monitor 與 feedback 行。
 --
--- 為何用 gma.textinput 而非 gma.gui.confirm(實機 + 官方 API 參考結論):
---   gma.gui.confirm 只回傳 true(OK)或 nil(其他),無法區分「No(略過)」與
---   「Cancel(中止)」,gma.gui 也沒有三按鈕對話框。要提供 yes/no/cancel 三種結果、
---   且 Enter 預設為 No,只能用 textinput 預填 "no":Enter 送出 "no" = 略過,
---   打 "yes" = 刪除,打 "cancel"(或按對話框 Cancel = nil)= 中止。
+-- 為何用按鈕(gma.gui.confirm)而非文字輸入:
+--   使用者偏好按鈕一鍵作答。gma.gui.confirm 回傳 true(Yes)或 nil(No/關閉),
+--   故只有兩種結果:Yes = 標記、其他 = 略過。沒有「per-pool 中止」——要中止就在
+--   最後的總結確認按 Cancel(此時什麼都還沒刪)。
 --
--- 計數方式(修正舊版「數字不更新」的問題):
---   舊版直接用 O.amount(pool) 當數量,但那是 pool 的 slot 高水位,刪除後不會縮小,
---   故顯示的是舊數字;presets 又因 handle 取法不同而被誤判為 0。
---   改為「走訪 pool 的每個 child、用 O.verify + 有名字才算」,得到當下真實數量;
---   presets 額外往下遞迴一層(pool → 各 feature type → 各 preset)。
+-- 計數方式(修正「數字不更新」與「presets 顯示 0」):
+--   一般 pool:O.handle("Macro"/"Group"…) 取 pool 根,走訪其 child、用 O.verify +
+--   有名字才算,得到當下真實數量(不用 O.amount 的 slot 高水位,故刪除後會更新)。
+--   Preset:handle "Preset <t>" 常解析成「某顆 preset(leaf,無 child)」而非 type pool,
+--   直接數 child 會得 0;故改用「該 type 內某顆已存在 preset 的 parent」當 type pool 來數。
+--   只有在有把握(數到 >0)時才顯示數字;數不到就不顯示數字(不再誤顯示 0)。
 --
 -- ⚠ 仍需實機驗證的假設:
 --   a) 計數:O.handle("Macro"/"Group"…) 取到的是該 pool 根、其 child 即為物件。
@@ -67,21 +66,9 @@ local PRESET_TYPES = { 1, 2, 3, 4, 5, 6, 7, 8, 9 }
 -- 詢問文字。count 為 nil(數不到)時不顯示數字。
 local function prompt_text(label, count)
     if count then
-        return string.format("Delete all %d %s?  (yes / no / cancel)", count, label)
+        return string.format("Delete all %d %s?", count, label)
     end
-    return string.format("Delete all %s?  (yes / no / cancel)", label)
-end
-
--- 把 textinput 的回傳(字串或 nil)解析成動作:
---   "yes"/"y"          → "select" 標記待刪
---   "cancel"/"c" 或 nil → "abort"  中止整個 plugin
---   其他(含 "no"、空白) → "skip"   略過此 pool(Enter 預填 "no" 即走這條)
-local function parse_answer(input)
-    if input == nil then return "abort" end
-    local s = input:gsub("^%s+", ""):gsub("%s+$", ""):lower()
-    if s == "yes" or s == "y" then return "select" end
-    if s == "cancel" or s == "c" then return "abort" end
-    return "skip"
+    return string.format("Delete all %s?", label)
 end
 
 -- 回傳某個 pool 要執行的 Delete 指令清單(preset 會展開成多條)。
@@ -154,33 +141,28 @@ local function count_valid_children(h)
     return n
 end
 
--- 即時計數某個 pool。取不到 → nil。
+-- 即時計數某個 pool。取不到 / 沒把握 → nil(詢問時不顯示數字)。
 local function count_pool(pool)
     if pool.preset then
-        -- 嘗試 1:逐 feature type 的 pool 直接數 child。
-        local total, seen = 0, false
+        local total, found = 0, false
         for _, t in ipairs(PRESET_TYPES) do
-            local c = count_valid_children(call1(O.handle, "Preset " .. t))
-            if c then seen = true; total = total + c end
-        end
-        if seen and total > 0 then return total end
-        -- 嘗試 2:整個 Preset pool,其 child 可能是 type pool,再往下數一層。
-        local root = call1(O.handle, "Preset")
-        if root then
-            local slots = call1(O.amount, root)
-            if slots then
-                local sum, any = 0, false
-                for i = 0, slots do
-                    local child = call1(O.child, root, i)
-                    if child and call1(O.verify, child) then
-                        any = true
-                        sum = sum + (count_valid_children(child) or 0)
-                    end
-                end
-                if any then return sum end
+            -- "Preset <t>" 常解析成某顆 preset(leaf,無 child),直接數會得 0;
+            -- 故優先用「該 type 內某顆已存在 preset 的 parent」當 type pool 來數。
+            local c
+            local item = call1(O.handle, "Preset " .. t .. ".1")
+            if item then
+                c = count_valid_children(call1(O.parent, item))
             end
+            -- 後備:直接把 "Preset <t>" 當 pool 數(某些版本可能可行)。
+            if not c or c == 0 then
+                local alt = count_valid_children(call1(O.handle, "Preset " .. t))
+                if alt and alt > 0 then c = alt end
+            end
+            dbg(string.format("preset type %d: children=%s", t, tostring(c)))
+            if c and c > 0 then found = true; total = total + c end
         end
-        if seen then return total end   -- 兩種方式都存在但為 0
+        -- 只有數到 >0 才回傳數字;否則回 nil,避免像舊版誤顯示 0。
+        if found then return total end
         return nil
     end
     return count_valid_children(call1(O.handle, pool.del))
@@ -200,17 +182,10 @@ function Start()
         local count = count_pool(pool)
         dbg(string.format("%s: count = %s", pool.key, tostring(count)))
 
-        local answer = gma.textinput(prompt_text(pool.label, count), "no")
-        local action = parse_answer(answer)
-
-        if action == "abort" then
-            -- cancel / 關閉對話框 → 中止整個 plugin,不刪任何東西。
-            gma.feedback(PLUGIN_TITLE .. ": cancelled, no changes.")
-            return
-        elseif action == "select" then
+        if gma.gui.confirm(PLUGIN_TITLE, prompt_text(pool.label, count)) then
             selected[#selected + 1] = { pool = pool, label = pool.label, count = count }
         end
-        -- "skip"(no / Enter)→ 不加入,繼續下一個 pool。
+        -- 未按 Yes(No / 關閉)→ 略過此 pool。要中止請在最後的總結確認按 Cancel。
     end
 
     -- 2) 全部沒選 → 安靜結束。
@@ -253,7 +228,6 @@ else
         POOLS           = POOLS,
         PRESET_TYPES    = PRESET_TYPES,
         prompt_text     = prompt_text,
-        parse_answer    = parse_answer,
         delete_commands = delete_commands,
         summary_text    = summary_text,
         confirm_text    = confirm_text,

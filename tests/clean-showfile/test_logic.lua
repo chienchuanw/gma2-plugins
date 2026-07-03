@@ -28,20 +28,9 @@ for _, p in ipairs(M.POOLS) do
        "no destructive patch pool: " .. p.key)
 end
 
--- ── prompt_text: count when known, yes/no/cancel hint always ──
-eq(M.prompt_text("macros", 14), "Delete all 14 macros?  (yes / no / cancel)", "prompt with count")
-eq(M.prompt_text("presets"), "Delete all presets?  (yes / no / cancel)", "prompt without count")
-
--- ── parse_answer: yes → select, no/blank → skip, cancel/nil → abort ──
-eq(M.parse_answer("yes"), "select", "yes selects")
-eq(M.parse_answer("Yes"), "select", "case-insensitive yes")
-eq(M.parse_answer("  y "), "select", "trimmed y selects")
-eq(M.parse_answer("no"), "skip", "no skips this pool")
-eq(M.parse_answer(""), "skip", "blank (Enter on cleared field) skips")
-eq(M.parse_answer("maybe"), "skip", "any other text skips")
-eq(M.parse_answer("cancel"), "abort", "cancel aborts whole plugin")
-eq(M.parse_answer("C"), "abort", "c aborts")
-eq(M.parse_answer(nil), "abort", "dialog Cancel button (nil) aborts")
+-- ── prompt_text: show count when known, plain label when not ──
+eq(M.prompt_text("macros", 14), "Delete all 14 macros?", "prompt with count")
+eq(M.prompt_text("presets"), "Delete all presets?", "prompt without count (unknown)")
 
 -- ── delete_commands: one 'Thru /nc' per normal pool ──
 local mac = M.delete_commands(M.POOLS[1])

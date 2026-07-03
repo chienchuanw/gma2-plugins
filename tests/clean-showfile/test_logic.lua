@@ -29,9 +29,9 @@ for _, p in ipairs(M.POOLS) do
        "no destructive patch pool: " .. p.key)
 end
 
--- ── prompt_text: count-bearing question ──
-eq(M.prompt_text("macros", 14), "Delete all 14 macros?", "prompt with count")
-eq(M.prompt_text("presets", 1), "Delete all 1 presets?", "prompt singular count still works")
+-- ── prompt_text: label-only question (no count; counting proved unreliable on-console) ──
+eq(M.prompt_text("macros"), "Delete all macros?", "prompt for macros")
+eq(M.prompt_text("presets"), "Delete all presets?", "prompt for presets always shown")
 
 -- ── classify_answer: X/close aborts, Yes selects, No skips ──
 eq(M.classify_answer(nil), "abort", "closing dialog (nil) aborts whole plugin")
@@ -53,15 +53,15 @@ eq(pre[1], "Delete Preset 1.* /nc", "preset type 1 command")
 eq(pre[4], "Delete Preset 4.* /nc", "preset type 4 (Color) command")
 eq(pre[9], "Delete Preset 9.* /nc", "preset type 9 (Video) command")
 
--- ── summary_text: only selected pools, with counts ──
-eq(M.summary_text({ { label = "macros", count = 14 }, { label = "effects", count = 3 } }),
-   "Cleaned: macros (14), effects (3)",
+-- ── summary_text: only selected pools ──
+eq(M.summary_text({ { label = "macros" }, { label = "effects" } }),
+   "Cleaned: macros, effects",
    "summary lists selected pools")
 eq(M.summary_text({}), "Cleaned: nothing.", "empty summary")
 
 -- ── confirm_text: final summary before the batch runs ──
-eq(M.confirm_text({ { label = "macros", count = 14 }, { label = "pages", count = 2 } }),
-   "About to delete:\n  macros (14)\n  pages (2)\n\nProceed?",
+eq(M.confirm_text({ { label = "macros" }, { label = "pages" } }),
+   "About to delete:\n  macros\n  pages\n\nProceed?",
    "final confirm lists everything selected")
 
 if fails == 0 then

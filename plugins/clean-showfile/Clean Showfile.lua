@@ -8,7 +8,8 @@
 --   2) 每個 pool 先數數量,空的直接跳過。
 --   3) 非空的 pool 用 gma.gui.confirm 顯示「Delete all <n> <label>?」的 Yes/No。
 --   4) 收集所有答案,過程中不刪任何東西(collect-then-execute)。
---   5) 若全部選 No → 安靜結束;否則顯示總結確認(這也是唯一的中止出口)。
+--      任何一步按 X / 關閉對話框 → 立即中止整個 plugin,不刪任何東西。
+--   5) 若全部選 No → 安靜結束;否則顯示總結確認(No/X 皆為取消)。
 --   6) 確認後才批次執行 Delete;/nc 略過主控台自身的刪除確認框。
 --   7) 刪除後把摘要 echo 到 System Monitor 與 feedback 行。
 --
@@ -21,6 +22,9 @@
 --      逐型 'Delete Preset <t>.* /nc'。若主控台有自訂 preset type 超過 9,需擴充。
 --   d) 部分 pool 有無法刪除的預設物件(如 World 1、預設 View/Page),批次刪除後可能殘留
 --      預設物件,屬正常;plugin 不因此報錯。
+--   e) 中止:gma.gui.confirm 回傳 true=Yes、false=No。若使用者按對話框的 X / 關閉,
+--      「假設」主控台回傳 nil(而非 false),plugin 據此中止整個動作。若實機 X 回傳
+--      false,則 X 會等同 No(略過該 pool 繼續),而非中止 —— 此行為需實機確認。
 
 local PLUGIN_TITLE = "Clean Showfile"
 
@@ -54,6 +58,16 @@ local PRESET_TYPES = { 1, 2, 3, 4, 5, 6, 7, 8, 9 }
 -- 「Delete all <n> <label>?」
 local function prompt_text(label, count)
     return string.format("Delete all %d %s?", count, label)
+end
+
+-- 把 gma.gui.confirm 的回傳分類成動作:
+--   nil  (按 X / 關閉對話框)→ "abort"  中止整個 plugin
+--   true (Yes)               → "select" 標記此 pool 待刪
+--   false(No)                → "skip"   略過此 pool,繼續下一個
+local function classify_answer(ans)
+    if ans == nil then return "abort" end
+    if ans then return "select" end
+    return "skip"
 end
 
 -- 回傳某個 pool 要執行的 Delete 指令清單(preset 會展開成多條)。
@@ -152,13 +166,19 @@ function Start()
         end
 
         if ask then
-            if gma.gui.confirm(PLUGIN_TITLE, question) then
+            local action = classify_answer(gma.gui.confirm(PLUGIN_TITLE, question))
+            if action == "abort" then
+                -- 使用者按 X / 關閉對話框 → 中止整個 plugin,不刪任何東西。
+                gma.feedback(PLUGIN_TITLE .. ": closed dialog, aborted (no changes).")
+                return
+            elseif action == "select" then
                 selected[#selected + 1] = {
                     pool  = pool,
                     label = pool.label,
                     count = count or 0,   -- 數不到時記 0,摘要不至於出錯
                 }
             end
+            -- "skip"(No)→ 不加入,繼續下一個 pool。
         end
     end
 
@@ -202,6 +222,7 @@ else
         POOLS           = POOLS,
         PRESET_TYPES    = PRESET_TYPES,
         prompt_text     = prompt_text,
+        classify_answer = classify_answer,
         delete_commands = delete_commands,
         summary_text    = summary_text,
         confirm_text    = confirm_text,

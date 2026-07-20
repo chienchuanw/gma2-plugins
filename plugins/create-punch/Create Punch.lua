@@ -19,8 +19,10 @@
 --        At 0
 --        Store Sequence <n> Cue <zero> Fade <seconds> /merge /nc
 --        Assign Sequence <n> Cue <zero> /trig=time /trigTime=0
+--        Label Sequence <n> Cue <zero> "---"
 --        ClearAll
---      撞號一律靜默 merge,不覆蓋既有 cue 的其他內容。
+--      撞號一律靜默 merge,不覆蓋既有 cue 的其他內容,但零號 cue 的
+--      名稱一律會被覆寫成 "---"(見 ZERO_CUE_LABEL)。
 --      零號 cue 的 trigger 設為 time、trigTime=0:GO 完當前 cue 後它會立刻
 --      自動接續觸發,把選定燈具在 <seconds> 秒內淡降到 0(punch 後自動 release)。
 
@@ -31,6 +33,9 @@ local DEBUG = false
 
 -- 未輸入 fade 時的預設秒數
 local DEFAULT_FADE = 1
+
+-- 零號 cue 的名稱(在 cue 列表中當作視覺分隔用)
+local ZERO_CUE_LABEL = "---"
 
 local internal_name = select(1, ...)
 local visible_name  = select(2, ...)
@@ -182,10 +187,12 @@ function Start()
         "At 0; " ..
         "Store Sequence %s Cue %s Fade %s /merge /nc; " ..
         "Assign Sequence %s Cue %s /trig=time /trigTime=0; " ..
+        'Label Sequence %s Cue %s "%s"; ' ..
         "ClearAll",
         S(t.seq_no), cur_cue,
         S(t.seq_no), zero_cue, fade_str,
-        S(t.seq_no), zero_cue)
+        S(t.seq_no), zero_cue,
+        S(t.seq_no), zero_cue, ZERO_CUE_LABEL)
     dbg("cmd = " .. cmd)
     gma.cmd(cmd)
 

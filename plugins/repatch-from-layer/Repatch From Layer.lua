@@ -42,10 +42,11 @@
 --   * "Store Macro <n>.<line>" does NOT create macro lines - building a macro
 --     that way produced a CMD_MACRO object with zero children. That is why the
 --     output is an importable XML file rather than a macro built in place.
---   * "Delete Dmx u.a" unpatches whatever occupies that address and keeps all
---     programming, which is how the Restore macro returns a fixture to having
---     no patch. Do not "simplify" it to "Delete Fixture n": that deletes the
---     fixture along with everything programmed into it.
+--   * "Delete Dmx u.a /nc" - the exact form the Restore macro emits - unpatches
+--     whatever occupies that address with no dialog, and keeps all programming.
+--     That is how Restore returns a fixture to having no patch. Do not
+--     "simplify" it to "Delete Fixture n": that deletes the fixture along with
+--     everything programmed into it.
 --
 -- Deliberately out of scope: creating fixtures, changing fixture types, 3D
 -- position, groups, fixture/channel IDs, multi-break fixtures and multipatch.
@@ -81,7 +82,11 @@ local OUTPUT_PREFIX = "NEW_PATCH_"
 -- console: this unpatches whatever occupies the address, with no dialog, and
 -- keeps all programming. Do NOT "simplify" it to "Delete Fixture n" - the patch
 -- documentation says that erases the fixture along with everything programmed
--- into it. Takes the DMX address as %s and the fixture id as %d, in that order.
+-- into it.
+--
+-- Formatted with the DMX address then the fixture id, so an alternative form
+-- that names the fixture instead of the address can be dropped in here without
+-- touching the caller. The current format uses only the address.
 local UNPATCH_FORMAT = "Delete Dmx %s /nc"
 
 -- Wrapped around the generated macros, mirroring what GMA Toolbox emits: it

@@ -134,12 +134,18 @@ eq(dupes2, 10, "re-reading the same layer is counted as duplicates")
 
 -- ─── restore_lines ────────────────────────────────────────────
 
-local restore, skipped = M.restore_lines(
-    { { id = 101 }, { id = 102 }, { id = 103 } },
+local restore, skipped, unpatches = M.restore_lines(
+    { { id = 101, start = 1 }, { id = 102, start = 55127 }, { id = 103, start = 600 } },
     { [101] = "1.001", [102] = "(-)" })          -- 103 absent from this console
-eq(#restore, 1, "only the patched fixture can be restored")
-eq(restore[1], "Assign Fixture 101 At Dmx 1.001", "restore line format")
-eq(#skipped, 2, "unpatched and missing fixtures are reported, not guessed")
+eq(#restore, 2, "a line for the patched fixture and for the unpatched one")
+eq(restore[1], "Assign Fixture 101 At Dmx 1.001", "patched fixture is reassigned")
+eq(restore[2], "Delete Dmx 108.343 /nc",
+   "unpatched fixture is undone by deleting the address repatch will use")
+eq(unpatches, 1, "one restore line unpatches")
+eq(#skipped, 1, "only the fixture missing from this console is skipped")
+eq(skipped[1].id, 103, "103 is the one with no state here")
+
+eq(M.unpatch_line("12.007"), "Delete Dmx 12.007 /nc", "unpatch line format")
 
 -- ─── macro_xml ────────────────────────────────────────────────
 
@@ -167,10 +173,10 @@ eq(M.clean_name("name.XML"), "name", "extension match is case-insensitive")
 eq(M.clean_name("a/b"), nil, "rejects a path separator")
 eq(M.clean_name("..\\evil"), nil, "rejects traversal")
 
-eq(M.OUTPUT_PREFIX, "TT_", "studio prefix")
-eq(M.default_output_name("SHOW-LAYER-"), "TT_SHOW", "prefix loses its LAYER tail")
-eq(M.default_output_name("(LYI) TB5"), "TT_(LYI) TB5", "plain name keeps its shape")
-eq(M.default_output_name("MYSHOW_layer_"), "TT_MYSHOW", "LAYER match is case-insensitive")
+eq(M.OUTPUT_PREFIX, "NEW_PATCH_", "generated-output prefix")
+eq(M.default_output_name("SHOW-LAYER-"), "NEW_PATCH_SHOW", "prefix loses its LAYER tail")
+eq(M.default_output_name("(LYI) TB5"), "NEW_PATCH_(LYI) TB5", "plain name keeps its shape")
+eq(M.default_output_name("MYSHOW_layer_"), "NEW_PATCH_MYSHOW", "LAYER match is case-insensitive")
 
 -- ─── xml_escape ───────────────────────────────────────────────
 

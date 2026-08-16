@@ -39,6 +39,10 @@
 --   * "Store Macro <n>.<line>" does NOT create macro lines - building a macro
 --     that way produced a CMD_MACRO object with zero children. That is why the
 --     output is an importable XML file rather than a macro built in place.
+--   * "Delete Dmx u.a" unpatches whatever occupies that address and keeps all
+--     programming, which is how the Restore macro returns a fixture to having
+--     no patch. Do not "simplify" it to "Delete Fixture n": that deletes the
+--     fixture along with everything programmed into it.
 --
 -- Deliberately out of scope: creating fixtures, changing fixture types, 3D
 -- position, groups, fixture/channel IDs, multi-break fixtures and multipatch.
@@ -62,8 +66,8 @@ local UNPATCHED = "(-)"
 
 -- Prepended to the generated file name and to both macro names, so anything
 -- this plugin produced is recognisable at a glance in the macros folder and in
--- the Macro pool. Studio initials; change it to suit.
-local OUTPUT_PREFIX = "TT_"
+-- the Macro pool.
+local OUTPUT_PREFIX = "NEW_PATCH_"
 
 -- Wrapped around the generated macros, mirroring what GMA Toolbox emits: it
 -- shows each command's response while the macro runs.
@@ -195,6 +199,20 @@ function M.repatch_line(id, dmx)
     return string.format("Assign Fixture %d At Dmx %s", id, dmx)
 end
 
+-- Undo for a fixture that had no patch before the repatch macro ran: deleting
+-- the DMX address unpatches whatever sits on it while leaving all programming
+-- intact. Note it deletes the ADDRESS, not the fixture - "Delete Fixture n"
+-- would erase the fixture and everything programmed into it.
+--
+-- Two known edges, both accepted rather than guessed at:
+--   * If another fixture shares this address it is unpatched too. Duplicate
+--     addresses are allowed on purpose here, so this is left alone.
+--   * On a multi-instance fixture only the start address is deleted. Whether
+--     that releases every instance is unverified on console.
+function M.unpatch_line(dmx)
+    return string.format("Delete Dmx %s /nc", dmx)
+end
+
 -- Full snapshot: one line per usable fixture, whether or not this console
 -- currently agrees, so the macro can be carried to another console unchanged.
 function M.repatch_lines(usable)
@@ -206,19 +224,29 @@ function M.repatch_lines(usable)
 end
 
 -- current = { [fixture_id] = "101.001" | "(-)" | nil }
--- Fixtures that are absent here, or currently unpatched, cannot be described by
--- an Assign and are returned as the second value so the report can list them.
+--
+-- Three cases, in the order they are tested:
+--   nil    the fixture is not on this console, so there is no state to restore
+--          - reported as skipped rather than guessed at
+--   "(-)"  the fixture exists but is unpatched, so the undo is to delete the
+--          address the repatch macro will have put it on
+--   else   an ordinary address, restored with the same Assign the repatch uses
+--
+-- Returns the lines, the skipped fixtures, and how many of the lines unpatch.
 function M.restore_lines(usable, current)
-    local lines, skipped = {}, {}
+    local lines, skipped, unpatches = {}, {}, 0
     for _, f in ipairs(usable) do
         local at = current[f.id]
-        if at and at ~= UNPATCHED and at ~= "" then
+        if at == nil then
+            skipped[#skipped + 1] = f
+        elseif at ~= UNPATCHED and at ~= "" then
             lines[#lines + 1] = M.repatch_line(f.id, at)
         else
-            skipped[#skipped + 1] = f
+            lines[#lines + 1] = M.unpatch_line(M.decode_address(f.start))
+            unpatches = unpatches + 1
         end
     end
-    return lines, skipped
+    return lines, skipped, unpatches
 end
 
 -- macros = { { name = ..., info = ..., lines = { "..." } } }
@@ -291,9 +319,13 @@ function M.summary_text(s)
     lines[#lines + 1] = ""
     lines[#lines + 1] = "Macro 1 Repatch: " .. s.repatch_lines .. " lines"
     lines[#lines + 1] = "Macro 2 Restore: " .. s.restore_lines .. " lines"
+    if s.restore_unpatches > 0 then
+        lines[#lines + 1] = "  " .. s.restore_unpatches ..
+            " of them unpatch (fixture has no patch now)"
+    end
     if s.restore_skipped > 0 then
         lines[#lines + 1] = "  " .. s.restore_skipped ..
-            " fixture(s) cannot be restored (currently unpatched)"
+            " fixture(s) have no state here to restore"
     end
     lines[#lines + 1] = ""
     lines[#lines + 1] = "Written to:"
@@ -465,7 +497,7 @@ function Start()
 
     local current, matched, missing = read_current(usable)
     local repatch = M.repatch_lines(usable)
-    local restore, restore_skipped = M.restore_lines(usable, current)
+    local restore, restore_skipped, restore_unpatches = M.restore_lines(usable, current)
 
     local outname = gma.textinput("Macro XML file name to write",
         M.default_output_name(input))
@@ -514,7 +546,7 @@ function Start()
         note("multi-break, skipped (%d): %s", #multibreak, id_list(multibreak, 60))
     end
     if #restore_skipped > 0 then
-        note("not restorable, currently unpatched (%d): %s",
+        note("no state to restore, not on this console (%d): %s",
             #restore_skipped, id_list(restore_skipped, 60))
     end
     if DEBUG then
@@ -530,10 +562,11 @@ function Start()
         duplicates      = duplicates,
         matched         = matched,
         missing         = #missing,
-        repatch_lines   = #repatch,
-        restore_lines   = #restore,
-        restore_skipped = #restore_skipped,
-        outfile         = outname,
+        repatch_lines     = #repatch,
+        restore_lines     = #restore,
+        restore_skipped   = #restore_skipped,
+        restore_unpatches = restore_unpatches,
+        outfile           = outname,
     }))
 
     gma.feedback(string.format("%s: %d repatch / %d restore line(s) -> macros/%s.xml",

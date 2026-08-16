@@ -6,3 +6,9 @@
 
 # temp (local scratch: exported showfile samples, etc.)
 /tmp/
+
+# Real showfile exports used while developing repatch-from-layer. They carry the
+# venue name, showfile name and per-fixture 3D coordinates, so they stay local.
+# The committed test data in tests/repatch-from-layer/fixtures/ is a
+# de-identified slice of the same files.
+/third-party/patch-creator/

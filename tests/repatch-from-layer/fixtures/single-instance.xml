@@ -1,0 +1,476 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<MA xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.malighting.de/grandma2/xml/MA" xsi:schemaLocation="http://schemas.malighting.de/grandma2/xml/MA http://schemas.malighting.de/grandma2/xml/3.9.60/MA.xsd" major_vers="3" minor_vers="9" stream_vers="60">
+	<Info datetime="2000-01-01T00:00:00" showfile="test_show" />
+	<Layer index="1" name="TEST SINGLE">
+		<Fixture index="0" name="Test Spot" fixture_id="101">
+			<FixtureType name="1 TEST TYPE">
+				<No>2</No>
+			</FixtureType>
+			<SubFixture index="0" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>51201</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+				<Channel index="9" />
+				<Channel index="10" />
+				<Channel index="11" />
+				<Channel index="12" />
+				<Channel index="13" />
+				<Channel index="14" />
+				<Channel index="15" />
+				<Channel index="16" />
+				<Channel index="17" />
+				<Channel index="18" />
+				<Channel index="19" />
+				<Channel index="20" />
+				<Channel index="21" />
+				<Channel index="22" />
+				<Channel index="23" />
+				<Channel index="24" />
+				<Channel index="25" />
+				<Channel index="26" />
+				<Channel index="27" />
+				<Channel index="28" />
+				<Channel index="29" />
+				<Channel index="30" />
+				<Channel index="31" />
+			</SubFixture>
+		</Fixture>
+		<Fixture index="1" name="Test Spot" fixture_id="102">
+			<FixtureType name="1 TEST TYPE">
+				<No>2</No>
+			</FixtureType>
+			<SubFixture index="0" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>51239</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+				<Channel index="9" />
+				<Channel index="10" />
+				<Channel index="11" />
+				<Channel index="12" />
+				<Channel index="13" />
+				<Channel index="14" />
+				<Channel index="15" />
+				<Channel index="16" />
+				<Channel index="17" />
+				<Channel index="18" />
+				<Channel index="19" />
+				<Channel index="20" />
+				<Channel index="21" />
+				<Channel index="22" />
+				<Channel index="23" />
+				<Channel index="24" />
+				<Channel index="25" />
+				<Channel index="26" />
+				<Channel index="27" />
+				<Channel index="28" />
+				<Channel index="29" />
+				<Channel index="30" />
+				<Channel index="31" />
+			</SubFixture>
+		</Fixture>
+		<Fixture index="2" name="Test Spot" fixture_id="103">
+			<FixtureType name="1 TEST TYPE">
+				<No>2</No>
+			</FixtureType>
+			<SubFixture index="0" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>51277</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+				<Channel index="9" />
+				<Channel index="10" />
+				<Channel index="11" />
+				<Channel index="12" />
+				<Channel index="13" />
+				<Channel index="14" />
+				<Channel index="15" />
+				<Channel index="16" />
+				<Channel index="17" />
+				<Channel index="18" />
+				<Channel index="19" />
+				<Channel index="20" />
+				<Channel index="21" />
+				<Channel index="22" />
+				<Channel index="23" />
+				<Channel index="24" />
+				<Channel index="25" />
+				<Channel index="26" />
+				<Channel index="27" />
+				<Channel index="28" />
+				<Channel index="29" />
+				<Channel index="30" />
+				<Channel index="31" />
+			</SubFixture>
+		</Fixture>
+		<Fixture index="3" name="Test Spot" fixture_id="104">
+			<FixtureType name="1 TEST TYPE">
+				<No>2</No>
+			</FixtureType>
+			<SubFixture index="0" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>51315</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+				<Channel index="9" />
+				<Channel index="10" />
+				<Channel index="11" />
+				<Channel index="12" />
+				<Channel index="13" />
+				<Channel index="14" />
+				<Channel index="15" />
+				<Channel index="16" />
+				<Channel index="17" />
+				<Channel index="18" />
+				<Channel index="19" />
+				<Channel index="20" />
+				<Channel index="21" />
+				<Channel index="22" />
+				<Channel index="23" />
+				<Channel index="24" />
+				<Channel index="25" />
+				<Channel index="26" />
+				<Channel index="27" />
+				<Channel index="28" />
+				<Channel index="29" />
+				<Channel index="30" />
+				<Channel index="31" />
+			</SubFixture>
+		</Fixture>
+		<Fixture index="4" name="Test Spot" fixture_id="105">
+			<FixtureType name="1 TEST TYPE">
+				<No>2</No>
+			</FixtureType>
+			<SubFixture index="0" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>51353</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+				<Channel index="9" />
+				<Channel index="10" />
+				<Channel index="11" />
+				<Channel index="12" />
+				<Channel index="13" />
+				<Channel index="14" />
+				<Channel index="15" />
+				<Channel index="16" />
+				<Channel index="17" />
+				<Channel index="18" />
+				<Channel index="19" />
+				<Channel index="20" />
+				<Channel index="21" />
+				<Channel index="22" />
+				<Channel index="23" />
+				<Channel index="24" />
+				<Channel index="25" />
+				<Channel index="26" />
+				<Channel index="27" />
+				<Channel index="28" />
+				<Channel index="29" />
+				<Channel index="30" />
+				<Channel index="31" />
+			</SubFixture>
+		</Fixture>
+		<Fixture index="5" name="Test Spot" fixture_id="106">
+			<FixtureType name="1 TEST TYPE">
+				<No>2</No>
+			</FixtureType>
+			<SubFixture index="0" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>51391</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+				<Channel index="9" />
+				<Channel index="10" />
+				<Channel index="11" />
+				<Channel index="12" />
+				<Channel index="13" />
+				<Channel index="14" />
+				<Channel index="15" />
+				<Channel index="16" />
+				<Channel index="17" />
+				<Channel index="18" />
+				<Channel index="19" />
+				<Channel index="20" />
+				<Channel index="21" />
+				<Channel index="22" />
+				<Channel index="23" />
+				<Channel index="24" />
+				<Channel index="25" />
+				<Channel index="26" />
+				<Channel index="27" />
+				<Channel index="28" />
+				<Channel index="29" />
+				<Channel index="30" />
+				<Channel index="31" />
+			</SubFixture>
+		</Fixture>
+		<Fixture index="6" name="Test Spot" fixture_id="107">
+			<FixtureType name="1 TEST TYPE">
+				<No>2</No>
+			</FixtureType>
+			<SubFixture index="0" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>51429</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+				<Channel index="9" />
+				<Channel index="10" />
+				<Channel index="11" />
+				<Channel index="12" />
+				<Channel index="13" />
+				<Channel index="14" />
+				<Channel index="15" />
+				<Channel index="16" />
+				<Channel index="17" />
+				<Channel index="18" />
+				<Channel index="19" />
+				<Channel index="20" />
+				<Channel index="21" />
+				<Channel index="22" />
+				<Channel index="23" />
+				<Channel index="24" />
+				<Channel index="25" />
+				<Channel index="26" />
+				<Channel index="27" />
+				<Channel index="28" />
+				<Channel index="29" />
+				<Channel index="30" />
+				<Channel index="31" />
+			</SubFixture>
+		</Fixture>
+		<Fixture index="7" name="Test Spot" fixture_id="108">
+			<FixtureType name="1 TEST TYPE">
+				<No>2</No>
+			</FixtureType>
+			<SubFixture index="0" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>51467</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+				<Channel index="9" />
+				<Channel index="10" />
+				<Channel index="11" />
+				<Channel index="12" />
+				<Channel index="13" />
+				<Channel index="14" />
+				<Channel index="15" />
+				<Channel index="16" />
+				<Channel index="17" />
+				<Channel index="18" />
+				<Channel index="19" />
+				<Channel index="20" />
+				<Channel index="21" />
+				<Channel index="22" />
+				<Channel index="23" />
+				<Channel index="24" />
+				<Channel index="25" />
+				<Channel index="26" />
+				<Channel index="27" />
+				<Channel index="28" />
+				<Channel index="29" />
+				<Channel index="30" />
+				<Channel index="31" />
+			</SubFixture>
+		</Fixture>
+		<Fixture index="8" name="Test Spot" fixture_id="109">
+			<FixtureType name="1 TEST TYPE">
+				<No>2</No>
+			</FixtureType>
+			<SubFixture index="0" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>51505</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+				<Channel index="9" />
+				<Channel index="10" />
+				<Channel index="11" />
+				<Channel index="12" />
+				<Channel index="13" />
+				<Channel index="14" />
+				<Channel index="15" />
+				<Channel index="16" />
+				<Channel index="17" />
+				<Channel index="18" />
+				<Channel index="19" />
+				<Channel index="20" />
+				<Channel index="21" />
+				<Channel index="22" />
+				<Channel index="23" />
+				<Channel index="24" />
+				<Channel index="25" />
+				<Channel index="26" />
+				<Channel index="27" />
+				<Channel index="28" />
+				<Channel index="29" />
+				<Channel index="30" />
+				<Channel index="31" />
+			</SubFixture>
+		</Fixture>
+		<Fixture index="9" name="Test Spot" fixture_id="110">
+			<FixtureType name="1 TEST TYPE">
+				<No>2</No>
+			</FixtureType>
+			<SubFixture index="0" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>51543</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+				<Channel index="9" />
+				<Channel index="10" />
+				<Channel index="11" />
+				<Channel index="12" />
+				<Channel index="13" />
+				<Channel index="14" />
+				<Channel index="15" />
+				<Channel index="16" />
+				<Channel index="17" />
+				<Channel index="18" />
+				<Channel index="19" />
+				<Channel index="20" />
+				<Channel index="21" />
+				<Channel index="22" />
+				<Channel index="23" />
+				<Channel index="24" />
+				<Channel index="25" />
+				<Channel index="26" />
+				<Channel index="27" />
+				<Channel index="28" />
+				<Channel index="29" />
+				<Channel index="30" />
+				<Channel index="31" />
+			</SubFixture>
+		</Fixture>
+	</Layer>
+</MA>

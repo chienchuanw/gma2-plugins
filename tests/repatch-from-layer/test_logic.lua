@@ -145,7 +145,11 @@ eq(unpatches, 1, "one restore line unpatches")
 eq(#skipped, 1, "only the fixture missing from this console is skipped")
 eq(skipped[1].id, 103, "103 is the one with no state here")
 
-eq(M.unpatch_line("12.007"), "Delete Dmx 12.007 /nc", "unpatch line format")
+eq(M.unpatch_line("12.007", 55), string.format(M.UNPATCH_FORMAT, "12.007", 55),
+   "unpatch line follows the configured format")
+
+eq(M.macro_base("NEW_PATCH_MYSHOW"), "MYSHOW", "macro names drop the file prefix")
+eq(M.macro_base("MYSHOW"), "MYSHOW", "a name without the prefix is left alone")
 
 -- ─── macro_xml ────────────────────────────────────────────────
 

@@ -167,8 +167,10 @@ eq(M.clean_name("name.XML"), "name", "extension match is case-insensitive")
 eq(M.clean_name("a/b"), nil, "rejects a path separator")
 eq(M.clean_name("..\\evil"), nil, "rejects traversal")
 
-eq(M.default_output_name("SHOW-LAYER-"), "SHOW_REPATCH", "prefix loses its LAYER tail")
-eq(M.default_output_name("(LYI) TB5"), "(LYI) TB5_REPATCH", "plain name keeps its shape")
+eq(M.OUTPUT_PREFIX, "TT_", "studio prefix")
+eq(M.default_output_name("SHOW-LAYER-"), "TT_SHOW", "prefix loses its LAYER tail")
+eq(M.default_output_name("(LYI) TB5"), "TT_(LYI) TB5", "plain name keeps its shape")
+eq(M.default_output_name("MYSHOW_layer_"), "TT_MYSHOW", "LAYER match is case-insensitive")
 
 -- ─── xml_escape ───────────────────────────────────────────────
 

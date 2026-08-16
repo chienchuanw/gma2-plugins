@@ -41,6 +41,8 @@ The first-party plugins maintained in this repository, all targeting grandMA2 **
 
 - **Clean Showfile** -- Walks a curated list of content pools (Macros, Presets, Groups, Sequences, Effects, Worlds, Filters, Layouts, Views, Timecodes, Pages), counting each pool live, and shows a Yes/No dialog for each one, e.g. *"Delete all 14 macros?"*. Yes marks the pool, No skips it. Answers are collected first; after a final summary confirmation (Cancel there aborts the whole run) the selected pools are wiped in one batch. Patch, fixtures, and DMX are deliberately excluded.
 
+- **Repatch From Layer** -- Reads exported fixture-layer XML and writes a macro file that repatches the show to match it. Point it at one export or at a `...-LAYER-` prefix to sweep every layer at once; it produces two macros -- **Repatch**, which moves every fixture to the address the XML specifies, and **Restore**, which puts them back exactly where this console has them now. The plugin never touches the patch itself: you import the file, read the macro, and run it when you are ready. Fixtures are matched by Fixture ID, and multi-instance fixtures (e.g. ACME Tornado TB5) are handled from their start address.
+
 Download the latest prebuilt plugins (always the newest [release](https://github.com/chienchuanw/gma2-plugins/releases)):
 
 - [**Update Info** (`update-info.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/update-info.zip)
@@ -48,6 +50,7 @@ Download the latest prebuilt plugins (always the newest [release](https://github
 - [**Create Punch** (`create-punch.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/create-punch.zip)
 - [**Correct Position Offset** (`correct-position-offset.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/correct-position-offset.zip)
 - [**Clean Showfile** (`clean-showfile.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/clean-showfile.zip)
+- [**Repatch From Layer** (`repatch-from-layer.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/repatch-from-layer.zip)
 
 ## Getting Started
 

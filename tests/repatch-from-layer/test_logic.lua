@@ -134,11 +134,24 @@ eq(dupes2, 10, "re-reading the same layer is counted as duplicates")
 
 -- ─── restore_lines ────────────────────────────────────────────
 
+-- normalize_patch: the console pads every property value with a leading space,
+-- so the raw values here are what gma.show.property.get actually hands back.
+eq(M.normalize_patch(" 101.001"), "101.001", "leading space is stripped")
+eq(M.normalize_patch("101.001"), "101.001", "an unpadded value is unchanged")
+eq(M.normalize_patch(" 512 "), "512", "a bare channel number is an address")
+eq(M.normalize_patch(" (-)"), nil, "padded unpatched sentinel is not an address")
+eq(M.normalize_patch("(-)"), nil, "unpadded unpatched sentinel is not an address")
+eq(M.normalize_patch(""), nil, "empty is not an address")
+eq(M.normalize_patch("  "), nil, "whitespace is not an address")
+eq(M.normalize_patch(nil), nil, "a failed read is not an address")
+eq(M.normalize_patch("None"), nil, "an unknown sentinel is not an address")
+
 local restore, skipped, unpatches = M.restore_lines(
     { { id = 101, start = 1 }, { id = 102, start = 55127 }, { id = 103, start = 600 } },
-    { [101] = "1.001", [102] = "(-)" })          -- 103 absent from this console
+    { [101] = " 1.001", [102] = " (-)" })        -- 103 absent from this console
 eq(#restore, 2, "a line for the patched fixture and for the unpatched one")
-eq(restore[1], "Assign Fixture 101 At Dmx 1.001", "patched fixture is reassigned")
+eq(restore[1], "Assign Fixture 101 At Dmx 1.001",
+   "patched fixture is reassigned, without the padding the console added")
 eq(restore[2], "Delete Dmx 108.343 /nc",
    "unpatched fixture is undone by deleting the address repatch will use")
 eq(unpatches, 1, "one restore line unpatches")

@@ -34,7 +34,10 @@
 --     phrasing "Assign Dmx u.a At Fixture n" adds a multipatch instead, so the
 --     order of the two objects in that command is not cosmetic.
 --   * gma.show.property.get(handle, "patch") returns a string like "101.001",
---     and "(-)" when the fixture is unpatched.
+--     and "(-)" when the fixture is unpatched - but PADDED WITH A LEADING
+--     SPACE in both cases (" 101.001", " (-)"). Comparing the raw value against
+--     "(-)" therefore never matches, which is why restore_lines whitelists
+--     things that look like addresses instead.
 --   * io.open(..., "w") works, which is what makes the macro-XML output viable.
 --   * "Store Macro <n>.<line>" does NOT create macro lines - building a macro
 --     that way produced a CMD_MACRO object with zero children. That is why the
@@ -62,7 +65,11 @@ local MACRO_DIR = "/macros/"
 local MAX_LAYER_SCAN = 64
 
 -- What the console returns for a fixture that has no patch.
-local UNPATCHED = "(-)"
+-- What the console reports for a fixture with no patch. Kept for documentation
+-- only: normalize_patch whitelists real addresses rather than matching this,
+-- because the value arrives padded (" (-)") and a future build could word it
+-- differently.
+local UNPATCHED = "(-)"    -- luacheck: ignore
 
 -- Prepended to the generated FILE name so it is recognisable in the macros
 -- folder. The macros inside keep the bare source name: once imported they sit
@@ -70,22 +77,11 @@ local UNPATCHED = "(-)"
 -- just noise.
 local OUTPUT_PREFIX = "NEW_PATCH_"
 
--- How the Restore macro returns a fixture to having no patch.
---
--- UNRESOLVED: "Delete Dmx u.a /nc" raises the delete-method dialog once per
--- line, which makes a macro built from it unusable. /nc failing to suppress
--- that dialog is a long-standing, cross-version complaint on the MA forum, so
--- the fix is a different command rather than a different flag. Candidates,
--- pending a console test:
---     Assign Fixture n /patch=0       property assignment, cannot delete a fixture
---     Assign Fixture n /patch=        same, with an empty value
---     Delete Channel n                reported popup-free, but these fixtures
---                                     have no Channel ID (ChaId reads "-")
---     Delete Fixture n                DO NOT USE until verified: the patch docs
---                                     say this erases the fixture and all of its
---                                     programming, the Dmx docs say it merely
---                                     unpatches. Not worth the risk unresolved.
--- Takes the DMX address as %s and the fixture id as %d, in that order.
+-- How the Restore macro returns a fixture to having no patch. Verified on
+-- console: this unpatches whatever occupies the address, with no dialog, and
+-- keeps all programming. Do NOT "simplify" it to "Delete Fixture n" - the patch
+-- documentation says that erases the fixture along with everything programmed
+-- into it. Takes the DMX address as %s and the fixture id as %d, in that order.
 local UNPATCH_FORMAT = "Delete Dmx %s /nc"
 
 -- Wrapped around the generated macros, mirroring what GMA Toolbox emits: it
@@ -250,23 +246,42 @@ function M.repatch_lines(usable)
     return lines
 end
 
--- current = { [fixture_id] = "101.001" | "(-)" | nil }
+-- The console pads property values with a leading space, so "patch" reads back
+-- as " 101.001" and an unpatched fixture as " (-)". Comparing that against a
+-- bare "(-)" silently classified every unpatched fixture as patched, and the
+-- Restore macro then emitted "Assign Fixture n At Dmx  (-)", which stalls the
+-- macro on an input dialog because "(-)" is not an address.
+--
+-- So this whitelists instead of blacklisting sentinels: a value is only usable
+-- as an address if, once trimmed, it looks like one. Anything else - "(-)", an
+-- empty string, a future sentinel, a failed read - is reported as no address,
+-- which is the safe direction.
+function M.normalize_patch(v)
+    if type(v) ~= "string" then return nil end
+    v = v:gsub("^%s+", ""):gsub("%s+$", "")
+    if v:match("^%d+%.%d+$") or v:match("^%d+$") then return v end
+    return nil
+end
+
+-- current = { [fixture_id] = raw patch property, or nil when the fixture is
+-- not on this console }
 --
 -- Three cases, in the order they are tested:
---   nil    the fixture is not on this console, so there is no state to restore
---          - reported as skipped rather than guessed at
---   "(-)"  the fixture exists but is unpatched, so the undo is to delete the
---          address the repatch macro will have put it on
---   else   an ordinary address, restored with the same Assign the repatch uses
+--   nil          the fixture is not here, so there is no state to restore -
+--                reported as skipped rather than guessed at
+--   no address   the fixture exists but is unpatched, so the undo is to delete
+--                the address the repatch macro will have put it on
+--   an address   restored with the same Assign the repatch macro uses
 --
 -- Returns the lines, the skipped fixtures, and how many of the lines unpatch.
 function M.restore_lines(usable, current)
     local lines, skipped, unpatches = {}, {}, 0
     for _, f in ipairs(usable) do
-        local at = current[f.id]
-        if at == nil then
+        local raw = current[f.id]
+        local at  = M.normalize_patch(raw)
+        if raw == nil then
             skipped[#skipped + 1] = f
-        elseif at ~= UNPATCHED and at ~= "" then
+        elseif at then
             lines[#lines + 1] = M.repatch_line(f.id, at)
         else
             lines[#lines + 1] = M.unpatch_line(M.decode_address(f.start), f.id)
@@ -431,7 +446,9 @@ local function read_current(usable)
     for i, f in ipairs(usable) do
         local h = call1(O.handle, "Fixture " .. f.id)
         if h then
-            current[f.id] = call1(P.get, h, "patch")
+            -- Empty string rather than nil, so a fixture that exists but whose
+            -- property could not be read is not mistaken for a missing one.
+            current[f.id] = call1(P.get, h, "patch") or ""
             matched = matched + 1
         else
             missing[#missing + 1] = f

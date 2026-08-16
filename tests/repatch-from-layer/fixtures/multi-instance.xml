@@ -1,0 +1,588 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<MA xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.malighting.de/grandma2/xml/MA" xsi:schemaLocation="http://schemas.malighting.de/grandma2/xml/MA http://schemas.malighting.de/grandma2/xml/3.9.60/MA.xsd" major_vers="3" minor_vers="9" stream_vers="60">
+	<Info datetime="2000-01-01T00:00:00" showfile="test_show" />
+	<Layer index="2" name="TEST MULTI">
+		<Fixture index="0" name="Test Multi" fixture_id="201">
+			<FixtureType name="1 TEST TYPE">
+				<No>3</No>
+			</FixtureType>
+			<AbsolutePosition>
+				<Location x="0" y="0" z="0" />
+				<Rotation x="0" y="0" z="0" />
+				<Scaling x="1" y="1" z="1" />
+			</AbsolutePosition>
+			<SubFixture index="0" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55191</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+			</SubFixture>
+			<SubFixture index="1" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55203</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+			</SubFixture>
+			<SubFixture index="2" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55175</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+			</SubFixture>
+			<SubFixture index="3" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55187</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+			</SubFixture>
+			<SubFixture index="4" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55159</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+			</SubFixture>
+			<SubFixture index="5" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55171</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+			</SubFixture>
+			<SubFixture index="6" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55143</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+			</SubFixture>
+			<SubFixture index="7" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55155</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+			</SubFixture>
+			<SubFixture index="8" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55127</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+			</SubFixture>
+			<SubFixture index="9" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55139</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+			</SubFixture>
+			<SubFixture index="10" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55207</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+			</SubFixture>
+		</Fixture>
+		<Fixture index="1" name="Test Multi" fixture_id="202">
+			<FixtureType name="1 TEST TYPE">
+				<No>3</No>
+			</FixtureType>
+			<AbsolutePosition>
+				<Location x="0" y="0" z="0" />
+				<Rotation x="0" y="0" z="0" />
+				<Scaling x="1" y="1" z="1" />
+			</AbsolutePosition>
+			<SubFixture index="0" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55276</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+			</SubFixture>
+			<SubFixture index="1" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55288</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+			</SubFixture>
+			<SubFixture index="2" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55260</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+			</SubFixture>
+			<SubFixture index="3" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55272</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+			</SubFixture>
+			<SubFixture index="4" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55244</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+			</SubFixture>
+			<SubFixture index="5" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55256</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+			</SubFixture>
+			<SubFixture index="6" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55228</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+			</SubFixture>
+			<SubFixture index="7" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55240</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+			</SubFixture>
+			<SubFixture index="8" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55212</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+			</SubFixture>
+			<SubFixture index="9" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55224</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+			</SubFixture>
+			<SubFixture index="10" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55292</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+			</SubFixture>
+		</Fixture>
+		<Fixture index="2" name="Test Multi" fixture_id="203">
+			<FixtureType name="1 TEST TYPE">
+				<No>3</No>
+			</FixtureType>
+			<AbsolutePosition>
+				<Location x="0" y="0" z="0" />
+				<Rotation x="0" y="0" z="0" />
+				<Scaling x="1" y="1" z="1" />
+			</AbsolutePosition>
+			<SubFixture index="0" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55361</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+			</SubFixture>
+			<SubFixture index="1" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55373</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+			</SubFixture>
+			<SubFixture index="2" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55345</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+			</SubFixture>
+			<SubFixture index="3" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55357</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+			</SubFixture>
+			<SubFixture index="4" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55329</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+			</SubFixture>
+			<SubFixture index="5" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55341</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+			</SubFixture>
+			<SubFixture index="6" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55313</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+			</SubFixture>
+			<SubFixture index="7" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55325</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+			</SubFixture>
+			<SubFixture index="8" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55297</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+				<Channel index="5" />
+				<Channel index="6" />
+				<Channel index="7" />
+				<Channel index="8" />
+			</SubFixture>
+			<SubFixture index="9" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55309</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+				<Channel index="4" />
+			</SubFixture>
+			<SubFixture index="10" react_to_grandmaster="true" color="ffffff">
+				<Patch>
+					<Address>55377</Address>
+				</Patch>
+				<AbsolutePosition>
+					<Location x="0" y="0" z="0" />
+					<Rotation x="0" y="0" z="0" />
+					<Scaling x="1" y="1" z="1" />
+				</AbsolutePosition>
+				<Channel index="0" />
+				<Channel index="1" />
+				<Channel index="2" />
+				<Channel index="3" />
+			</SubFixture>
+		</Fixture>
+	</Layer>
+</MA>

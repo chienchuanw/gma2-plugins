@@ -8,7 +8,9 @@ A development workspace for **grandMA2 lighting-console plugins**, written in **
 
 There is **no build system, package manager, linter, or local test runner**. grandMA2 runs only on Windows, and plugins execute *inside the console* — you cannot run or test them from this machine. Iteration is: edit Lua/XML here → import into a grandMA2 console (or onPC) → run and observe the System Monitor (`gma.echo`) output there. Treat all "testing" as manual on-console; don't fabricate a test command.
 
-Comments are frequently written in Traditional Chinese (zh-TW); match the language of the file you're editing.
+Comments are frequently written in Traditional Chinese (zh-TW); match the language of the file you're editing. **New plugins are written with English comments** (starting with `plugins/repatch-from-layer/`) — the zh-TW convention applies only to the files that already use it.
+
+Pure logic lives at the top of each plugin and is exported when the global `gma` is nil, so it can be unit-tested off-console: `lua tests/<plugin>/test_logic.lua` from the repo root.
 
 ## Plugin anatomy (the core convention)
 

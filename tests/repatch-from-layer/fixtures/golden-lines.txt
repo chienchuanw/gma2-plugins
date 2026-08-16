@@ -1,0 +1,10 @@
+Assign Fixture 101 At Dmx 101.001
+Assign Fixture 102 At Dmx 101.039
+Assign Fixture 103 At Dmx 101.077
+Assign Fixture 104 At Dmx 101.115
+Assign Fixture 105 At Dmx 101.153
+Assign Fixture 106 At Dmx 101.191
+Assign Fixture 107 At Dmx 101.229
+Assign Fixture 108 At Dmx 101.267
+Assign Fixture 109 At Dmx 101.305
+Assign Fixture 110 At Dmx 101.343

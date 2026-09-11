@@ -178,7 +178,13 @@ local EXPORT_TIMEOUT = 60
 local IMPORT_NAME = "Downgrade Import"
 local IMPORT_LUA = "Downgrade Import.lua"
 local IMPORT_XML = "Downgrade Import.xml"
-local PLUGIN_DIR = "/plugins/"
+-- Where plugin .lua files live was an assumption on the first console run, and
+-- installing the import half failed because of it. It is no longer assumed:
+-- the folder is found by looking for this plugin's own file, so whatever
+-- directory THIS was loaded from is the one the import half is written to.
+local SELF_LUA = "Downgrade Export.lua"
+local PLUGIN_DIR_CANDIDATES = { "/plugins/", "/plugin/", "/lua/", "/luaplugins/" }
+local PLUGIN_DIR = PLUGIN_DIR_CANDIDATES[1]   -- fallback for the mkdir pass
 
 local function call1(fn, ...)
     if not fn then return nil end
@@ -273,18 +279,42 @@ end
 -- Put the import half on the other console so the next step needs no setup.
 -- The .lua is copied rather than embedded: one source of truth, and no quote
 -- escaping, which has bitten this repo before.
-local function install_import_plugin(base, out_base, target)
-    local src = read_file(base .. PLUGIN_DIR .. IMPORT_LUA)
-    if not src then
-        return false, IMPORT_LUA .. " is not installed on this console"
+-- Find the folder this plugin was itself loaded from, rather than trusting a
+-- hardcoded name. Returns the folder plus a list of what was tried, so a
+-- failure says exactly which paths were looked at instead of just "missing".
+local function find_plugin_dir(base)
+    local tried = {}
+    for _, dir in ipairs(PLUGIN_DIR_CANDIDATES) do
+        local path = base .. dir .. SELF_LUA
+        tried[#tried + 1] = path
+        if read_file(path) then return dir, tried end
     end
-    local ok, err = write_file(out_base .. PLUGIN_DIR .. IMPORT_LUA, src)
-    if not ok then return false, tostring(err) end
+    return nil, tried
+end
+
+local function install_import_plugin(base, out_base, target)
+    local dir, tried = find_plugin_dir(base)
+    if not dir then
+        return false, "could not find this plugin's own folder. Tried:\n  " ..
+            table.concat(tried, "\n  ")
+    end
+
+    local src = read_file(base .. dir .. IMPORT_LUA)
+    if not src then
+        return false, IMPORT_LUA .. " is not in " .. base .. dir ..
+            "\n  Install BOTH plugins on this console; the import half is copied from here."
+    end
+
+    ensure_dir(out_base .. string.gsub(dir, "/$", ""))
+
+    local ok, err = write_file(out_base .. dir .. IMPORT_LUA, src)
+    if not ok then return false, "writing " .. out_base .. dir .. IMPORT_LUA .. ": " .. tostring(err) end
 
     local desc = M.plugin_descriptor(target, IMPORT_LUA, IMPORT_NAME)
-    ok, err = write_file(out_base .. PLUGIN_DIR .. IMPORT_XML, desc)
-    if not ok then return false, tostring(err) end
-    return true
+    ok, err = write_file(out_base .. dir .. IMPORT_XML, desc)
+    if not ok then return false, "writing " .. out_base .. dir .. IMPORT_XML .. ": " .. tostring(err) end
+
+    return true, out_base .. dir
 end
 
 function Start()
@@ -375,7 +405,7 @@ function Start()
 
     if bar then call1(gma.gui.progress.stop, bar) end
 
-    local installed, install_err = install_import_plugin(base, out_base, target)
+    local installed, install_where = install_import_plugin(base, out_base, target)
 
     -- ── report ──
     local ok_count = 0
@@ -391,9 +421,11 @@ function Start()
     end
     note("%d of %d pools written to %s", ok_count, #M.POOLS, out_base)
     if installed then
-        note("%s installed alongside them.", IMPORT_NAME)
+        note("%s installed into %s", IMPORT_NAME, tostring(install_where))
     else
-        note("%s NOT installed: %s", IMPORT_NAME, tostring(install_err))
+        note("%s NOT installed:", IMPORT_NAME)
+        note("  %s", tostring(install_where))
+        note("  Copy it across by hand and give it a %s descriptor to continue.", target)
     end
     note("")
     note("Known losses, inherent to downgrading and not fixed here:")
@@ -408,8 +440,8 @@ function Start()
         "dimmer, and run %s there.\n\n" ..
         "See the System Monitor for the per-pool detail.",
         ok_count, #M.POOLS, target, out_base,
-        installed and (IMPORT_NAME .. " is already installed there.")
-                  or ("Could not install " .. IMPORT_NAME .. ": " .. tostring(install_err)),
+        installed and (IMPORT_NAME .. " is already installed in\n" .. tostring(install_where))
+                  or ("COULD NOT install " .. IMPORT_NAME .. ":\n" .. tostring(install_where)),
         target, IMPORT_NAME))
 end
 

@@ -279,42 +279,56 @@ end
 -- Put the import half on the other console so the next step needs no setup.
 -- The .lua is copied rather than embedded: one source of truth, and no quote
 -- escaping, which has bitten this repo before.
--- Find the folder this plugin was itself loaded from, rather than trusting a
--- hardcoded name. Returns the folder plus a list of what was tried, so a
--- failure says exactly which paths were looked at instead of just "missing".
-local function find_plugin_dir(base)
-    local tried = {}
+-- Look for the import plugin's source. It is NOT reliably in the console tree:
+-- plugins are commonly imported straight off a USB stick, in which case nothing
+-- under gma2_V_<version>/ holds a copy, so the drives are swept too.
+local function find_import_source(base)
+    local internal = {}
     for _, dir in ipairs(PLUGIN_DIR_CANDIDATES) do
-        local path = base .. dir .. SELF_LUA
-        tried[#tried + 1] = path
-        if read_file(path) then return dir, tried end
+        local path = base .. dir .. IMPORT_LUA
+        internal[#internal + 1] = path
+        local c = read_file(path)
+        if c then return c, path end
     end
-    return nil, tried
+
+    for letter = string.byte("D"), string.byte("Z") do
+        local root = string.char(letter) .. ":/"
+        for _, sub in ipairs({ "", "plugins/" }) do
+            local c = read_file(root .. sub .. IMPORT_LUA)
+            if c then return c, root .. sub .. IMPORT_LUA end
+        end
+    end
+
+    return nil, table.concat(internal, "\n  ") .. "\n  ...and D:\\ through Z:\\, root and \\plugins"
 end
 
+-- The descriptor is the part worth automating: it is what has to carry the
+-- target version's header, and hand-editing that is exactly the chore this
+-- plugin exists to remove. It is written whether or not the .lua turns up, so a
+-- missing source costs one file copy rather than the whole step.
 local function install_import_plugin(base, out_base, target)
-    local dir, tried = find_plugin_dir(base)
-    if not dir then
-        return false, "could not find this plugin's own folder. Tried:\n  " ..
-            table.concat(tried, "\n  ")
-    end
-
-    local src = read_file(base .. dir .. IMPORT_LUA)
-    if not src then
-        return false, IMPORT_LUA .. " is not in " .. base .. dir ..
-            "\n  Install BOTH plugins on this console; the import half is copied from here."
-    end
-
-    ensure_dir(out_base .. string.gsub(dir, "/$", ""))
-
-    local ok, err = write_file(out_base .. dir .. IMPORT_LUA, src)
-    if not ok then return false, "writing " .. out_base .. dir .. IMPORT_LUA .. ": " .. tostring(err) end
+    local dest_dir = out_base .. PLUGIN_DIR
+    ensure_dir(out_base .. string.gsub(PLUGIN_DIR, "/$", ""))
 
     local desc = M.plugin_descriptor(target, IMPORT_LUA, IMPORT_NAME)
-    ok, err = write_file(out_base .. dir .. IMPORT_XML, desc)
-    if not ok then return false, "writing " .. out_base .. dir .. IMPORT_XML .. ": " .. tostring(err) end
+    local ok, err = write_file(dest_dir .. IMPORT_XML, desc)
+    if not ok then
+        return false, "could not write the descriptor to " .. dest_dir .. IMPORT_XML ..
+            ": " .. tostring(err)
+    end
 
-    return true, out_base .. dir
+    local src, where = find_import_source(base)
+    if not src then
+        return false, string.format(
+            "%s written, but %s was not found, so copy it in beside the descriptor.\n" ..
+            "  Looked in:\n  %s", dest_dir .. IMPORT_XML, IMPORT_LUA, where)
+    end
+
+    ok, err = write_file(dest_dir .. IMPORT_LUA, src)
+    if not ok then
+        return false, "copying " .. where .. ": " .. tostring(err)
+    end
+    return true, dest_dir
 end
 
 function Start()
@@ -423,9 +437,8 @@ function Start()
     if installed then
         note("%s installed into %s", IMPORT_NAME, tostring(install_where))
     else
-        note("%s NOT installed:", IMPORT_NAME)
+        note("%s only partly installed:", IMPORT_NAME)
         note("  %s", tostring(install_where))
-        note("  Copy it across by hand and give it a %s descriptor to continue.", target)
     end
     note("")
     note("Known losses, measured on a 331-fixture show:")
@@ -442,7 +455,7 @@ function Start()
         "See the System Monitor for the per-pool detail.",
         ok_count, #M.POOLS, target, out_base,
         installed and (IMPORT_NAME .. " is already installed in\n" .. tostring(install_where))
-                  or ("COULD NOT install " .. IMPORT_NAME .. ":\n" .. tostring(install_where)),
+                  or ("Partly installed:\n" .. tostring(install_where)),
         target, IMPORT_NAME))
 end
 

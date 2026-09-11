@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MA xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.malighting.de/grandma2/xml/MA" xsi:schemaLocation="http://schemas.malighting.de/grandma2/xml/MA http://schemas.malighting.de/grandma2/xml/3.9.60/MA.xsd" major_vers="3" minor_vers="9" stream_vers="60">
+	<Info datetime="2026-09-11T20:55:24" showfile="downgrade test slice" />
+	<Macros>
+		<MacroPool index="0">
+			<Macro index="0" name="Song Change">
+				<Macroline index="0">
+					<text>ClearAll</text>
+				</Macroline>
+				<Macroline index="1" delay="2">
+					<text>Go+ Executor 1.1</text>
+				</Macroline>
+				<Macroline index="2">
+					<text>Macro &quot;Song Change&quot;</text>
+				</Macroline>
+			</Macro>
+		</MacroPool>
+	</Macros>
+</MA>

@@ -1,41 +1,48 @@
--- Downgrade Audit
+-- Downgrade Audit (v2)
 -- Snapshots a show's contents so two downgrade routes can be compared as text
 -- instead of by counting things on screen.
 --
--- Run it three times - on the source show, on the show the macros produced, and
--- on the show the plugins produced - then diff the three reports. Differences
--- between the two downgraded shows are plugin bugs. Content missing from BOTH
--- is inherent to downgrading and belongs in the README, not the bug list.
+-- Run it on the source show, on the show the macros produced, and on the show
+-- the plugins produced, then diff the three reports. Differences between the
+-- two downgraded shows are plugin bugs. Content missing from BOTH is inherent
+-- to downgrading and belongs in the README, not the bug list.
+--
+-- v1 counted pools by walking "Root <n>" children from index 1 and trusting
+-- getobj.amount. That reported zero for almost every pool. Clean Showfile had
+-- already solved this: the child index base is 0 for some objects and 1 for
+-- others, invalid slots have to be filtered with getobj.verify, and the pools
+-- answer to their object keyword ("Macro", "Group", ...) rather than to their
+-- Root number. v2 uses that method and reports both addressing routes, so a
+-- disagreement between them is visible rather than silently wrong.
 --
 -- Pure reads: no commands are executed and nothing in the show is touched.
--- Runs on 3.9.60 and on old consoles; everything is pcall-wrapped and the code
--- stays Lua 5.1 compatible.
+-- Lua 5.1 compatible, everything pcall-wrapped, runs on old consoles too.
 
 local PLUGIN_TITLE = "Downgrade Audit"
 local REPORT = "/importexport/ZZAudit_report.txt"
 
--- The thirteen pools the downgrade route moves, plus the three the old macro
--- never exported, so the report also shows what v2 would have to add.
+-- keyword = how the command line addresses the pool; root = its Root number.
+-- Pools the downgrade route moves, then the ones the old macro never exported.
 local POOLS = {
-    { root = 8,  label = "UserImagePool" },
-    { root = 13, label = "Macros" },
-    { root = 17, label = "Presets" },
-    { root = 22, label = "Groups" },
-    { root = 24, label = "Effects" },
-    { root = 25, label = "Sequences" },
-    { root = 30, label = "ExecutorPages" },
-    { root = 35, label = "Timecodes" },
-    { root = 38, label = "Layouts" },
-    { root = 39, label = "UserProfiles" },
-    { root = 40, label = "Users" },
-    { root = 18, label = "Worlds        (not exported)" },
-    { root = 19, label = "Filters       (not exported)" },
-    { root = 26, label = "Timers        (not exported)" },
+    { label = "Macros",        keyword = "Macro",       root = 13 },
+    { label = "Groups",        keyword = "Group",       root = 22 },
+    { label = "Sequences",     keyword = "Sequence",    root = 25 },
+    { label = "Effects",       keyword = "Effect",      root = 24 },
+    { label = "Layouts",       keyword = "Layout",      root = 38 },
+    { label = "Timecodes",     keyword = "Timecode",    root = 35 },
+    { label = "ExecutorPages", keyword = "Page",        root = 30 },
+    { label = "UserImagePool", keyword = "Image",       root = 8  },
+    { label = "UserProfiles",  keyword = "UserProfile", root = 39 },
+    { label = "Users",         keyword = "User",        root = 40 },
+    { label = "Worlds     (x)", keyword = "World",      root = 18 },
+    { label = "Filters    (x)", keyword = "Filter",     root = 19 },
+    { label = "Timers     (x)", keyword = "Timer",      root = 26 },
+    { label = "Views      (x)", keyword = "View",       root = nil },
 }
 
--- Views have no Root number; they are addressed one at a time.
-local MAX_VIEW_SCAN = 60
+local PRESET_TYPES = { 1, 2, 3, 4, 5, 6, 7, 8, 9 }
 
+local MAX_VIEW_SCAN = 80
 local LIVE_SETUP = 10
 local LAYER_COLLECT_CLASS = "CMD_FIXTURE_LAYER_COLLECT"
 
@@ -69,22 +76,60 @@ local function log(fmt, ...)
     gma.echo("[" .. PLUGIN_TITLE .. "] " .. line)
 end
 
--- getobj.amount over-reports a collection by one, so it is not comparable on its
--- own. Walking until a child handle comes back nil gives the real count.
-local function true_count(h)
-    if not h then return 0 end
-    local reported = call1(O.amount, h) or 0
+-- Borrowed wholesale from Clean Showfile: scan one slot past the reported
+-- amount because the index base varies by object, and let verify plus a
+-- non-empty name decide which slots are real.
+local function count_valid_children(h)
+    if not h then return nil end
+    local slots = call1(O.amount, h)
+    if not slots then return nil end
     local n = 0
-    for i = 1, reported do
-        if not call1(O.child, h, i) then break end
-        n = n + 1
+    for i = 0, slots do
+        local ch = call1(O.child, h, i)
+        if ch and ch ~= 0 and call1(O.verify, ch) then
+            local nm = call1(O.name, ch)
+            if nm and nm ~= "" then n = n + 1 end
+        end
     end
     return n
 end
 
+local function valid_children(h)
+    local out = {}
+    if not h then return out end
+    local slots = call1(O.amount, h) or 0
+    for i = 0, slots do
+        local ch = call1(O.child, h, i)
+        if ch and ch ~= 0 and call1(O.verify, ch) then
+            local nm = call1(O.name, ch)
+            if nm and nm ~= "" then out[#out + 1] = ch end
+        end
+    end
+    return out
+end
+
+local function fmt(n)
+    if n == nil then return "-" end
+    return tostring(n)
+end
+
+-- Most pools are a collection holding one pool holding the objects, so the
+-- interesting number is one level down. Report both and let the diff decide.
+local function root_counts(root)
+    if not root then return nil, nil end
+    local h = call1(O.handle, "Root " .. root)
+    if not h then return nil, nil end
+    local kids = valid_children(h)
+    local nested = 0
+    for _, ch in ipairs(kids) do
+        nested = nested + (count_valid_children(ch) or 0)
+    end
+    return #kids, nested
+end
+
 function Start()
     gma.echo("")
-    log("===== Downgrade Audit =====")
+    log("===== Downgrade Audit v2 =====")
 
     base_path = call1(gma.show.getvar, "path") or call1(gma.show.getvar, "PATH")
     log("path    = %s", tostring(base_path))
@@ -99,65 +144,65 @@ function Start()
 
     log("")
     log("---- POOL COUNTS ----")
-    log("%-30s %8s %8s", "pool", "direct", "nested")
+    log("(x) = never exported by the downgrade route")
+    log("%-18s %10s %10s %10s", "pool", "byKeyword", "rootDirect", "rootNested")
     for _, p in ipairs(POOLS) do
-        local h = call1(O.handle, "Root " .. p.root)
-        if not h then
-            log("%-30s %8s", p.label, "absent")
-        else
-            -- Most pools are a collection holding one pool, which holds the
-            -- objects. Report both levels so neither shape hides a difference.
-            local direct = true_count(h)
-            local nested = 0
-            for i = 1, direct do
-                nested = nested + true_count(call1(O.child, h, i))
-            end
-            log("%-30s %8d %8d", p.label, direct, nested)
-        end
+        local kw = count_valid_children(call1(O.handle, p.keyword))
+        local d, n = root_counts(p.root)
+        log("%-18s %10s %10s %10s", p.label, fmt(kw), fmt(d), fmt(n))
     end
 
+    -- "Preset <type>" resolves to a single preset rather than the type's pool,
+    -- so count the pool through the parent of a known member instead.
     log("")
-    log("---- VIEWS (never exported by the downgrade route) ----")
-    local views = 0
-    local view_names = {}
+    log("---- PRESETS BY TYPE ----")
+    local preset_total = 0
+    for _, t in ipairs(PRESET_TYPES) do
+        local c
+        local item = call1(O.handle, "Preset " .. t .. ".1")
+        if item then c = count_valid_children(call1(O.parent, item)) end
+        if not c or c == 0 then
+            local alt = count_valid_children(call1(O.handle, "Preset " .. t))
+            if alt and alt > 0 then c = alt end
+        end
+        log("  type %d: %s", t, fmt(c))
+        if c then preset_total = preset_total + c end
+    end
+    log("preset total: %d", preset_total)
+
+    log("")
+    log("---- VIEWS (never exported) ----")
+    local names = {}
     for i = 1, MAX_VIEW_SCAN do
         local h = call1(O.handle, "View " .. i)
         if h then
-            views = views + 1
-            view_names[#view_names + 1] = string.format("%d=%s", i, tostring(call1(O.name, h)))
+            names[#names + 1] = string.format("%d=%s", i, tostring(call1(O.name, h)))
         end
     end
-    log("views found: %d", views)
-    if views > 0 then log("  %s", table.concat(view_names, "  ")) end
+    log("views found: %d", #names)
+    if #names > 0 then log("  %s", table.concat(names, "  ")) end
 
     log("")
     log("---- FIXTURE LAYERS ----")
     local coll
     local live = call1(O.handle, "Root " .. LIVE_SETUP)
     if live then
-        local n = call1(O.amount, live) or 0
-        for i = 1, n do
-            local child = call1(O.child, live, i)
-            if child and call1(O.class, child) == LAYER_COLLECT_CLASS then
-                coll = child
-                break
-            end
+        for _, ch in ipairs(valid_children(live)) do
+            if call1(O.class, ch) == LAYER_COLLECT_CLASS then coll = ch break end
         end
     end
 
     if not coll then
         log("layer collection not found")
     else
-        local total, layers = 0, true_count(coll)
-        log("layers: %d", layers)
-        for i = 1, layers do
-            local h = call1(O.child, coll, i)
-            if h then
-                local fixtures = true_count(h)
-                total = total + fixtures
-                log("  number=%-4s fixtures=%-5d %s",
-                    tostring(call1(O.number, h)), fixtures, tostring(call1(O.name, h)))
-            end
+        local layers = valid_children(coll)
+        local total = 0
+        log("layers: %d", #layers)
+        for _, h in ipairs(layers) do
+            local fixtures = count_valid_children(h) or 0
+            total = total + fixtures
+            log("  number=%-4s fixtures=%-5d %s",
+                tostring(call1(O.number, h)), fixtures, tostring(call1(O.name, h)))
         end
         log("fixtures across all layers: %d", total)
     end
@@ -172,9 +217,8 @@ function Start()
 
     if gma.gui and gma.gui.msgbox then
         pcall(gma.gui.msgbox, PLUGIN_TITLE,
-            "Audit finished.\n\nRENAME the report before the next run so it is\n" ..
-            "not overwritten, then send all three:\n\n" ..
-            tostring(base_path) .. REPORT)
+            "Audit v2 finished.\n\nRENAME the report before the next run so it\n" ..
+            "is not overwritten:\n\n" .. tostring(base_path) .. REPORT)
     end
 end
 

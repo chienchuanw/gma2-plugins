@@ -428,9 +428,10 @@ function Start()
         note("  Copy it across by hand and give it a %s descriptor to continue.", target)
     end
     note("")
-    note("Known losses, inherent to downgrading and not fixed here:")
-    note("  * layouts assigned into a view disappear (views are not exported)")
-    note("  * default values set through presets are lost")
+    note("Known losses, measured on a 331-fixture show:")
+    note("  * views are not exported at all (86 of them did not survive)")
+    note("    Layouts themselves come through intact; the views arranging them do not.")
+    note("  * default values set through presets are lost (inherited claim, unverified)")
     gma.echo("")
 
     gma.gui.msgbox(PLUGIN_TITLE, string.format(

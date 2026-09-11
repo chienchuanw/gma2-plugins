@@ -1,0 +1,200 @@
+# Showfile Downgrade — Design Spec
+
+**Date:** 2026-09-11
+**Status:** agreed, ready to implement
+**Origin:** optimising the three macros in
+[chienchuanw/gma2-macros](https://github.com/chienchuanw/gma2-macros) (`macros/showfile-downgrade/`)
+into a plugin pair.
+
+## Problem
+
+A grandMA2 showfile is forward-compatible only: a 3.9.60 show will not open on a
+3.3.4 console, and `SaveShow` has no "save as older version" option. The
+established workaround is to export every pool as XML, hand-edit the version
+header of each file, and import them into an empty show on the old console.
+
+The existing macro trio automates the export and the import. It does **not**
+automate the hand-editing, which is the only manual step and the one that scales
+with the number of pools. It also uses fixed `delay="1".."4"` waits, which a
+large show can outrun silently.
+
+## Scope
+
+**In scope (v1):** reach macro parity — the same 13 pools — with the header
+rewriting automated, the fixed delays replaced by real completion checks, and
+the scratch-layer cleanup made safe.
+
+**Out of scope (v2):** exporting pools the old macro omits. The Root map is now
+known (see Findings) so this is a follow-up, not a redesign. Deferred because
+importing new pools needs a new dependency order (a View references a Layout, so
+it must import after one), and mixing that into v1 makes a failure impossible to
+attribute.
+
+**Out of scope (permanent):** the cross-machine / USB case. That is what the
+macros remain for.
+
+## Target environment
+
+Both versions running as **onPC on the same Windows machine**. This is what makes
+zero-USB, zero-manual-copy possible. Confirmed installed layout:
+
+```
+C:/ProgramData/MA Lighting Technologies/grandma/gma2_V_3.9.60
+C:/ProgramData/MA Lighting Technologies/grandma/gma2_V_3.3.4
+```
+
+## Console findings (all probe-verified, 2026-09-11)
+
+Established by `plugins/downgrade-probe/` across four iterations on a 331-fixture
+3.9.60 show and a fresh 3.3.4 show.
+
+| Finding | Value |
+|---|---|
+| Lua on 3.9.60 | 5.3 |
+| `io.open` / `os.remove` / `os.rename` / `os.execute` | all present |
+| Writing to the *other* version's tree | works |
+| `os.execute "mkdir"` | works — a missing target folder can be created |
+| `gma.show.getvar("path")` | `C:/ProgramData/.../gma2_V_3.9.60`, forward slashes, no trailing separator |
+| Version substitution in that path | clean: last `%d+%.%d+[%.%d]*` match is the version |
+| Every export file ends with | `</MA>` — this is the completion marker |
+| `Export Root 13 "X"` | `/importexport/X.xml` |
+| setup/3 → `Export * "X"` (fixture types) | `/library/X.xml` |
+| setup/4 → `Export * "X"` (fixture layers) | `/fixture_layers/X.xml` |
+| Multi-file exports | **do not happen** — one file per pool regardless of show size (568 KB for 1087 subfixtures) |
+| `Export /path="<windows path>"` | accepted; can even write straight into the other version's tree |
+| `ChangeDest <n>` argument | the object **number**, not the child index |
+| LiveSetup | `Root 10`; children include `FixtureTypes` (number 3) and `Layers` (number 4) |
+| EditSetup | `Root 11`; reports `children=0` unless the console is inside Full Access Setup |
+| `ChangeDest 10` → `ChangeDest 4` → `Export *` | produces a byte-identical layers export to the EditSetup route |
+| Entering EditSetup (`ChangeDest 11`) | makes DMX output unstable and forces a full fixture/preset type rebuild on exit |
+| Fixture layer numbering | starts at **2**; `number = index + 1`; there is no layer number 1 |
+| `getobj.amount` on a pool collection | **over-reports by one** (27 reported / 26 retrievable; 2 reported / 1 retrievable) |
+| Views | no Root number; addressable as `View 1`, `View 2`, … |
+
+### Root pool map
+
+```
+ 8 UserImagePool   13 Macros        15 Plugins      16 Gels        17 Presets
+18 Worlds          19 Filters       20 FadePaths    22 Groups      23 Forms
+24 Effects         25 Sequences     26 Timers       27 MasterSections
+30 ExecutorPages   31 ChannelPages  33 Songs        34 Agendas     35 Timecodes
+36 RemoteTypes     37 DMXSnapshotPool              38 Layouts
+39 UserProfiles    40 Users
+```
+
+No handle at 12, 28, 29, 32, 44, 45, 47–50. Root 46 is `Temp`.
+
+### The `Delete 2` question
+
+The old Import macro runs, with the destination set to the layer list:
+
+```
+Import "FixtureLayers" At 2 /o
+Delete 2
+```
+
+Probing the 3.3.4 show after patching the scratch dimmer showed the scratch
+layer at `number=2`, so before the import `Delete 2` does name it. What is
+*not* established is whether the import renumbers: the source show's layers
+carry numbers 2–27, so if they land on their original numbers the layer at 2
+afterwards is `(GZ) LED` — a real 36-fixture layer — and the macro would destroy
+it on every run.
+
+**Resolution: do not replicate the line.** The plugin reads the layer list
+before and after the import via `gma.show.getobj` and removes the scratch layer
+by identity (name plus fixture count), using whatever number it holds at that
+moment. This is correct under either answer, so the open question stops being a
+blocker.
+
+## Design
+
+### Plugin 1 — Downgrade Export (runs on the high version)
+
+1. Ask for the target version. Validate `major.minor.stream`; reject a target
+   that is not lower than the running version.
+2. Derive the sibling tree by substituting the version segment of
+   `getvar("path")`. Probe-write to confirm it is writable; `mkdir` the
+   subfolders if they are missing; abort with the attempted path if that fails.
+3. `SelectDrive 1`, then export all 13 pools. After each, poll for the expected
+   file until its content ends with `</MA>`, or time out at 60 s and record the
+   failure without aborting the run.
+4. For each exported file: read, rewrite the header to the target version, write
+   the **copy** into the sibling tree at the same relative path. Originals are
+   left untouched so a wrong target version can be corrected without
+   re-exporting.
+5. Copy `Downgrade Import.lua` from this console's `plugins/` folder into the
+   sibling tree and generate a `.xml` descriptor carrying the target version's
+   header, so the import plugin is already installed on the other side.
+6. Report per pool: found, bytes, rewritten, or the failure reason.
+
+### Plugin 2 — Downgrade Import (runs on the low version)
+
+1. Warn that the show should be new and empty; abort on cancel.
+2. Read the layer list through LiveSetup and record every layer's identity.
+3. Import each pool in dependency order, polling the destination pool's object
+   count until it settles (tolerating the off-by-one in `amount`).
+4. Re-read the layer list, find the scratch layer by identity, delete it by its
+   current number.
+5. Report per pool, and state explicitly whether the scratch layer was removed.
+
+### Pools, in export order
+
+| key | export command | folder | file |
+|---|---|---|---|
+| `fixturetype` | setup → `3`, `Export * "FixtureType"` | `/library/` | `FixtureType.xml` |
+| `fixturelayers` | setup → `4`, `Export * "FixtureLayers"` | `/fixture_layers/` | `FixtureLayers.xml` |
+| `sequence` | `Export Root 25 "Sequence"` | `/importexport/` | `Sequence.xml` |
+| `executorpages` | `Export Root 30 "ExecutorPages"` | `/importexport/` | `ExecutorPages.xml` |
+| `groups` | `Export Root 22 "Groups"` | `/importexport/` | `Groups.xml` |
+| `presets` | `Export Root 17 "Presets"` | `/importexport/` | `Presets.xml` |
+| `layouts` | `Export Root 38 "Layouts"` | `/importexport/` | `Layouts.xml` |
+| `userimagepool` | `Export Root 8 "UserImagePool"` | `/importexport/` | `UserImagePool.xml` |
+| `macros` | `Export Root 13 "Macros"` | `/importexport/` | `Macros.xml` |
+| `effects` | `Export Root 24 "Effects"` | `/importexport/` | `Effects.xml` |
+| `timecodes` | `Export Root 35 "Timecodes"` | `/importexport/` | `Timecodes.xml` |
+| `userprofiles` | `Export Root 39 "UserProfiles"` | `/importexport/` | `UserProfiles.xml` |
+| `users` | `Export Root 40 "Users"` | `/importexport/` | `Users.xml` |
+
+Import order matches the old macro: fixture types, fixture layers, user images,
+effects, groups, layouts, presets, sequences, executor pages, timecodes, macros,
+then user profiles and users last and separately.
+
+The folder column is the expected location. Because only `Root 13` was probed
+directly, the file locator sweeps `/importexport/`, `/library/` and
+`/fixture_layers/` for `<name>.xml` rather than trusting the column, and the run
+report names the folder each file was actually found in.
+
+## Decisions taken during design
+
+- **Two plugins, not one.** The import half has to run on the old console.
+- **Fixed 13-pool list, no per-pool prompts.** These pools reference each other;
+  letting a user deselect one produces a quietly broken show. (`Clean Showfile`
+  prompts per pool because deletion is genuinely independent — this is not.)
+- **Originals preserved, copies written across.** Cheap, and it makes a wrong
+  target version recoverable without a re-export.
+- **The import plugin's `.lua` is copied, not embedded.** One source of truth;
+  embedding it as a string would need quote escaping, which has bitten this repo
+  before.
+- **The macros stay.** They cover the cross-machine case the plugins do not.
+  Both READMEs cross-reference.
+
+## Known data loss
+
+Carried over from the macro's README and not addressed in v1: layouts assigned
+into a view disappear, and preset-set default values are lost. The Root map
+shows Views are not exported at all, which is consistent with the first symptom.
+v1 warns about both in the final report.
+
+## Acceptance
+
+Downgrade the same source show twice — once with the old macros, once with the
+plugins — and compare sequence, preset, group and layer counts plus spot-checked
+content. A control run is what separates "the plugin is wrong" from "downgrading
+loses this anyway".
+
+## Open, non-blocking
+
+- Whether `ChangeDest 10` avoids Full Access Setup. The export works either way;
+  only the wording of the warning depends on it. v1 warns conservatively.
+- Whether the scratch dimmer is needed at all, or whether layers import into a
+  completely empty show. v1 requires a layer to exist and says so.

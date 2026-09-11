@@ -61,6 +61,31 @@ eq(M.import_cmd(by_key.users), 'Import "Users" At Root 40 /nc', "users import")
 eq(M.import_cmd(by_key.fixturelayers), 'Import "FixtureLayers" At 2 /nc', "layers import")
 eq(M.import_cmd(by_key.fixturetype), 'Import "FixtureType" At 2 /nc', "fixture types import")
 
+-- ─── count addressing ─────────────────────────────────────────
+
+-- Counting through "Root <n>" is what made the first console run report every
+-- pool as importing nothing: that handle reports one child whether the pool is
+-- empty or full. Every Root pool must therefore carry a keyword to count by,
+-- except presets, which are counted per type.
+for _, p in ipairs(M.IMPORT_ORDER) do
+    if p.root then
+        eq(p.keyword ~= nil or p.preset == true, true,
+           p.key .. " can be counted without relying on its Root handle")
+    end
+end
+eq(by_key.macros.keyword, "Macro", "macros counted as Macro")
+eq(by_key.groups.keyword, "Group", "groups counted as Group")
+eq(by_key.sequence.keyword, "Sequence", "sequences counted as Sequence")
+eq(by_key.executorpages.keyword, "Page", "executor pages counted as Page")
+eq(by_key.presets.preset, true, "presets are counted per type")
+eq(by_key.presets.keyword, nil, "presets have no single keyword")
+eq(#M.PRESET_TYPES, 9, "nine preset types, matching Clean Showfile")
+
+-- The setup pools have no Root pool to count; the console half falls back to a
+-- fixed settle for them, so they must not claim a keyword.
+eq(by_key.fixturetype.keyword, nil, "fixture types have no pool count")
+eq(by_key.fixturelayers.keyword, nil, "fixture layers have no pool count")
+
 -- ─── layer_key ────────────────────────────────────────────────
 
 eq(M.layer_key("test", 1), "test|1", "key from name and fixture count")

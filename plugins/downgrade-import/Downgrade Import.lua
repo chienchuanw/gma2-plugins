@@ -35,21 +35,30 @@ local M = {}
 -- types before the layers built on them, groups and presets and effects before
 -- the sequences that reference them, images before the layouts that show them,
 -- and users last because importing them changes who is logged in.
+-- "keyword" is how the command line addresses the pool, and it is what the
+-- progress count is read through. The Root number alone is not usable for that:
+-- "Root 13" reports one child whether the macro pool holds nothing or five
+-- hundred macros, so watching it never sees an import happen.
 M.IMPORT_ORDER = {
     { key = "fixturetype",   file = "FixtureType",   setup = 3, at = 2 },
     { key = "fixturelayers", file = "FixtureLayers", setup = 4, at = 2 },
-    { key = "userimagepool", file = "UserImagePool", root = 8  },
-    { key = "effects",       file = "Effects",       root = 24 },
-    { key = "groups",        file = "Groups",        root = 22 },
-    { key = "layouts",       file = "Layouts",       root = 38 },
-    { key = "presets",       file = "Presets",       root = 17 },
-    { key = "sequence",      file = "Sequence",      root = 25 },
-    { key = "executorpages", file = "ExecutorPages", root = 30 },
-    { key = "timecodes",     file = "Timecodes",     root = 35 },
-    { key = "macros",        file = "Macros",        root = 13 },
-    { key = "userprofiles",  file = "UserProfiles",  root = 39 },
-    { key = "users",         file = "Users",         root = 40 },
+    { key = "userimagepool", file = "UserImagePool", root = 8,  keyword = "Image" },
+    { key = "effects",       file = "Effects",       root = 24, keyword = "Effect" },
+    { key = "groups",        file = "Groups",        root = 22, keyword = "Group" },
+    { key = "layouts",       file = "Layouts",       root = 38, keyword = "Layout" },
+    { key = "presets",       file = "Presets",       root = 17, preset = true },
+    { key = "sequence",      file = "Sequence",      root = 25, keyword = "Sequence" },
+    { key = "executorpages", file = "ExecutorPages", root = 30, keyword = "Page" },
+    { key = "timecodes",     file = "Timecodes",     root = 35, keyword = "Timecode" },
+    { key = "macros",        file = "Macros",        root = 13, keyword = "Macro" },
+    { key = "userprofiles",  file = "UserProfiles",  root = 39, keyword = "UserProfile" },
+    { key = "users",         file = "Users",         root = 40, keyword = "User" },
 }
+
+-- Preset pools are addressed per type, and "Preset <type>" resolves to a single
+-- preset rather than the type's pool, so they are counted through the parent of
+-- a known member instead.
+M.PRESET_TYPES = { 1, 2, 3, 4, 5, 6, 7, 8, 9 }
 
 -- /nc suppresses the import confirmation dialog. The old macro used /o, which is
 -- an Export option and is not documented for Import; a plugin cannot click a
@@ -141,33 +150,50 @@ local function fail(msg)
     note(msg)
 end
 
+-- The child index base is 0 for some objects and 1 for others, and some slots
+-- are stale, so the scan runs one past the reported amount and lets verify plus
+-- a non-empty name decide what is real. Taken from Clean Showfile, which solved
+-- this first; the earlier version of this file scanned from 1 and trusted the
+-- count, which is why every pool appeared to import nothing.
+local function valid_children(h)
+    local out = {}
+    if not h then return out end
+    local slots = call1(O.amount, h)
+    if not slots then return out end
+    for i = 0, slots do
+        local ch = call1(O.child, h, i)
+        if ch and ch ~= 0 and call1(O.verify, ch) then
+            local nm = call1(O.name, ch)
+            if nm and nm ~= "" then out[#out + 1] = ch end
+        end
+    end
+    return out
+end
+
+local function count_valid_children(h)
+    if not h then return nil end
+    if not call1(O.amount, h) then return nil end
+    return #valid_children(h)
+end
+
 local function layer_collection()
     local live = call1(O.handle, "Root " .. LIVE_SETUP)
     if not live then return nil end
-    local n = call1(O.amount, live) or 0
-    for i = 1, n do
-        local child = call1(O.child, live, i)
-        if child and call1(O.class, child) == LAYER_COLLECT_CLASS then
-            return child
-        end
+    for _, child in ipairs(valid_children(live)) do
+        if call1(O.class, child) == LAYER_COLLECT_CLASS then return child end
     end
     return nil
 end
 
--- amount over-reports by one, so the loop stops at the first index that yields
--- no handle rather than trusting the count.
 local function read_layers()
     local coll = layer_collection()
     if not coll then return nil end
 
     local out = {}
-    local n = call1(O.amount, coll) or 0
-    for i = 1, n do
-        local h = call1(O.child, coll, i)
-        if not h then break end
+    for _, h in ipairs(valid_children(coll)) do
         local name = call1(O.name, h)
         out[#out + 1] = {
-            key = M.layer_key(name, call1(O.amount, h)),
+            key = M.layer_key(name, count_valid_children(h)),
             number = tonumber(call1(O.number, h)),
             name = name,
         }
@@ -175,11 +201,23 @@ local function read_layers()
     return out
 end
 
+-- How many objects this pool holds right now. Counted through the object
+-- keyword, because the Root handle reports the same single child no matter what
+-- the pool contains - watching that number never sees an import happen.
 local function pool_amount(pool)
-    if not pool.root then return nil end
-    local h = call1(O.handle, "Root " .. pool.root)
-    if not h then return nil end
-    return call1(O.amount, h)
+    if pool.preset then
+        local total, found = 0, false
+        for _, t in ipairs(M.PRESET_TYPES) do
+            local c
+            local item = call1(O.handle, "Preset " .. t .. ".1")
+            if item then c = count_valid_children(call1(O.parent, item)) end
+            if c and c > 0 then found = true; total = total + c end
+        end
+        if found then return total end
+        return 0
+    end
+    if not pool.keyword then return nil end
+    return count_valid_children(call1(O.handle, pool.keyword))
 end
 
 -- Issue the import, then watch the destination pool's count until it stops

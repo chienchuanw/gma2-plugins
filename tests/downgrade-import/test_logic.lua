@@ -86,44 +86,68 @@ eq(#M.PRESET_TYPES, 9, "nine preset types, matching Clean Showfile")
 eq(by_key.fixturetype.keyword, nil, "fixture types have no pool count")
 eq(by_key.fixturelayers.keyword, nil, "fixture layers have no pool count")
 
--- ─── layer_key ────────────────────────────────────────────────
+-- ─── strip_number ─────────────────────────────────────────────
 
-eq(M.layer_key("test", 1), "test|1", "key from name and fixture count")
-eq(M.layer_key("(GZ) LED 2", 36), "(GZ) LED 2|36", "name may contain spaces and digits")
-eq(M.layer_key(nil, 1), "?|1", "missing name tolerated")
-eq(M.layer_key("test", nil), "test|-1", "missing count tolerated")
+-- getobj.name answers the label with the object's own number appended, so the
+-- raw name changes whenever the console renumbers.
+eq(M.strip_number("(GZ) LED 3", 3), "(GZ) LED", "trailing number stripped")
+eq(M.strip_number("test 28", 28), "test", "two-digit number stripped")
+eq(M.strip_number("2 TRUSS 15", 15), "2 TRUSS", "leading digits survive")
+eq(M.strip_number("Auto-Created 2", 2), "Auto-Created", "hyphenated label")
+eq(M.strip_number("(GZ) LED 3", 9), "(GZ) LED 3", "only this object's own number goes")
+eq(M.strip_number("Plain", nil), "Plain", "no number to strip")
+eq(M.strip_number(nil, 3), "?", "nil name tolerated")
 
--- ─── find_scratch ─────────────────────────────────────────────
+-- ─── find_leftover_layer ──────────────────────────────────────
 
-local before = { { key = "test|1", number = 2 } }
+-- Both verified console runs are encoded here. Identity matching fails on both:
+-- the scratch layer came back renamed, emptied and renumbered each time.
+local before = { { number = 2, name = "test", fixtures = 1 } }
 
--- The realistic case: importing renumbers, and the scratch layer moves.
-local after = {
-    { key = "(GZ) LED 2|36", number = 2 },
-    { key = "(GZ) BEAM 3|22", number = 3 },
-    { key = "test|1", number = 28 },
+-- What the plugin produced: the scratch layer emptied and renamed in place.
+local plugin_run = {
+    { number = 1,  name = "Auto-Created", fixtures = 21 },
+    { number = 2,  name = "Auto-Created", fixtures = 0  },
+    { number = 3,  name = "(GZ) LED",     fixtures = 36 },
+    { number = 28, name = "YOU LI TRUSS 3", fixtures = 5 },
 }
-local found = M.find_scratch(before, after)
-eq(found ~= nil, true, "scratch layer found")
-eq(found.number, 28, "found at its NEW number, not the one it started with")
-eq(found.key, "test|1", "identified by key")
+local found = M.find_leftover_layer(before, plugin_run)
+eq(found ~= nil, true, "plugin run: leftover found")
+eq(found.number, 2, "plugin run: the empty layer is number 2")
 
--- The other possible outcome: numbering is untouched and it is still at 2.
-local unchanged = { { key = "test|1", number = 2 }, { key = "(GZ) LED 2|36", number = 3 } }
-eq(M.find_scratch(before, unchanged).number, 2, "works when numbering did not move")
+-- What the macros produced: the scratch layer kept its name but moved to 28.
+local macro_run = {
+    { number = 2,  name = "(GZ) LED", fixtures = 35 },
+    { number = 27, name = "YOU LI TRUSS 3", fixtures = 4 },
+    { number = 28, name = "test", fixtures = 0 },
+}
+eq(M.find_leftover_layer(before, macro_run).number, 28, "macro run: leftover at 28")
 
--- Refusals. Deleting the wrong layer costs a production layer, so anything
--- ambiguous stops rather than guesses.
-local ambiguous = { { key = "test|1", number = 2 }, { key = "test|1", number = 9 } }
-eq(M.find_scratch(before, ambiguous), nil, "two identical matches is a refusal")
-eq(M.find_scratch(before, { { key = "(GZ) LED 2|36", number = 2 } }), nil,
-   "scratch layer already gone is a refusal")
-eq(M.find_scratch({}, after), nil, "nothing recorded beforehand is a refusal")
-eq(M.find_scratch(nil, after), nil, "nil before is a refusal")
-eq(M.find_scratch(before, nil), nil, "nil after is a refusal")
+-- A real layer is never empty, so a non-empty list means there is nothing to do.
+eq(M.find_leftover_layer(before, { { number = 2, name = "(GZ) LED", fixtures = 35 } }), nil,
+   "no empty layer is a refusal, not a deletion")
 
-local _, why = M.find_scratch(before, ambiguous)
-eq(type(why), "string", "a refusal explains itself")
+-- Two empty layers could mean the source show legitimately had one. Refuse.
+local two_empty = {
+    { number = 2, name = "Auto-Created", fixtures = 0 },
+    { number = 9, name = "Spare",        fixtures = 0 },
+}
+eq(M.find_leftover_layer(before, two_empty), nil, "two empty layers is a refusal")
+local _, why = M.find_leftover_layer(before, two_empty)
+eq(type(why) == "string" and string.find(why, "Spare", 1, true) ~= nil, true,
+   "the refusal names the candidates")
+
+eq(M.find_leftover_layer({}, plugin_run), nil, "nothing recorded beforehand is a refusal")
+eq(M.find_leftover_layer(nil, plugin_run), nil, "nil before is a refusal")
+eq(M.find_leftover_layer(before, nil), nil, "nil after is a refusal")
+
+-- A fixture count that could not be read is not evidence of emptiness, and
+-- must never be the reason something gets deleted.
+eq(M.find_leftover_layer(before, { { number = 2, name = "x" } }), nil,
+   "an unreadable fixture count is a refusal, not a deletion")
+local _, why2 = M.find_leftover_layer(before, { { number = 2, name = "x" } })
+eq(type(why2) == "string" and string.find(why2, "count", 1, true) ~= nil, true,
+   "the refusal says the count could not be read")
 
 -- ─── settled ──────────────────────────────────────────────────
 

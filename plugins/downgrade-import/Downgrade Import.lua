@@ -70,18 +70,29 @@ function M.import_cmd(pool)
     return string.format('Import "%s" At %d /nc', pool.file, pool.at or 2)
 end
 
--- A layer's identity: its name plus how many children the console reports for
--- it. Both halves are read the same way before and after the import, so the
--- console's habit of over-reporting a collection by one cancels out.
-function M.layer_key(name, count)
-    return string.format("%s|%d", name and tostring(name) or "?", tonumber(count) or -1)
+-- getobj.name answers "(GZ) LED 3" - the label with the object's own number
+-- appended. Anything that keys on the raw name therefore changes the moment the
+-- console renumbers, which is exactly when identity matters. Strip it.
+function M.strip_number(name, number)
+    if type(name) ~= "string" then return "?" end
+    if number == nil then return name end
+    local stripped = string.gsub(name, "%s+" .. tostring(number) .. "$", "")
+    return stripped
 end
 
--- Finds the layer that was already there before the import. Returns the entry
--- from the AFTER list, so the caller deletes the number it holds now rather
--- than the one it started with. Refuses - nil plus a reason - whenever the
--- answer is not unique, because deleting the wrong layer costs production data.
-function M.find_scratch(before, after)
+-- Finds the layer left over from the scratch fixture, for deletion.
+--
+-- Identity matching was tried first and does not survive contact with the
+-- console. Across two verified runs the scratch layer came out renamed, emptied
+-- and renumbered: "test 2" became "test 28" under the macros and
+-- "Auto-Created 2" with no fixtures under this plugin. Name, number and fixture
+-- count all moved, so none of them identifies it.
+--
+-- What held in both runs is that the leftover is the only layer with no
+-- fixtures in it, every real layer having at least one. An empty fixture layer
+-- also has nothing in it to lose, which is what makes acting on this safe.
+-- Anything less clear-cut refuses and says why.
+function M.find_leftover_layer(before, after)
     if type(before) ~= "table" or type(after) ~= "table" then
         return nil, "layer lists were not readable"
     end
@@ -89,19 +100,28 @@ function M.find_scratch(before, after)
         return nil, "no layer list was recorded before the import"
     end
 
-    local wanted = {}
-    for _, e in ipairs(before) do wanted[e.key] = true end
-
-    local hits = {}
+    -- A layer whose fixture count could not be read is not evidence of
+    -- anything. Refusing beats deleting on the strength of a failed read.
+    local empty = {}
     for _, e in ipairs(after) do
-        if wanted[e.key] then hits[#hits + 1] = e end
+        if e.fixtures == nil then
+            return nil, string.format("could not read the fixture count of layer %s; refusing",
+                tostring(e.number))
+        end
+        if e.fixtures == 0 then empty[#empty + 1] = e end
     end
 
-    if #hits == 1 then return hits[1] end
-    if #hits == 0 then
-        return nil, "the pre-import layer is gone; the import appears to have replaced it"
+    if #empty == 1 then return empty[1] end
+    if #empty == 0 then
+        return nil, "every layer holds fixtures; nothing looks like the scratch layer"
     end
-    return nil, string.format("%d layers match the pre-import one; refusing to guess", #hits)
+
+    local names = {}
+    for _, e in ipairs(empty) do
+        names[#names + 1] = string.format("%s (number %s)", tostring(e.name), tostring(e.number))
+    end
+    return nil, string.format("%d empty layers, cannot tell which is the scratch one: %s",
+        #empty, table.concat(names, ", "))
 end
 
 -- gma.show.getobj.amount over-reports a pool collection by one, so its absolute
@@ -191,11 +211,11 @@ local function read_layers()
 
     local out = {}
     for _, h in ipairs(valid_children(coll)) do
-        local name = call1(O.name, h)
+        local number = tonumber(call1(O.number, h))
         out[#out + 1] = {
-            key = M.layer_key(name, count_valid_children(h)),
-            number = tonumber(call1(O.number, h)),
-            name = name,
+            number = number,
+            name = M.strip_number(call1(O.name, h), number),
+            fixtures = count_valid_children(h),
         }
     end
     return out
@@ -322,10 +342,10 @@ function Start()
 
     -- ── remove the scratch layer, by identity ──
     local after = read_layers()
-    local scratch, why = M.find_scratch(before, after)
+    local scratch, why = M.find_leftover_layer(before, after)
     local removed = false
     if scratch then
-        note("removing scratch layer %s, now at number %s",
+        note("removing empty leftover layer %q at number %s",
             tostring(scratch.name), tostring(scratch.number))
         gma.cmd("ChangeDest /")
         gma.cmd("ChangeDest " .. EDIT_SETUP)

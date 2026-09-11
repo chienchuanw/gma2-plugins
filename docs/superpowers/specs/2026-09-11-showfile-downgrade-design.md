@@ -1,7 +1,7 @@
 # Showfile Downgrade — Design Spec
 
 **Date:** 2026-09-11
-**Status:** agreed, ready to implement
+**Status:** implemented and verified on console — see *Verified on console* at the end
 **Origin:** optimising the three macros in
 [chienchuanw/gma2-macros](https://github.com/chienchuanw/gma2-macros) (`macros/showfile-downgrade/`)
 into a plugin pair.
@@ -67,8 +67,8 @@ Established by `plugins/downgrade-probe/` across four iterations on a 331-fixtur
 | EditSetup | `Root 11`; reports `children=0` unless the console is inside Full Access Setup |
 | `ChangeDest 10` → `ChangeDest 4` → `Export *` | produces a byte-identical layers export to the EditSetup route |
 | Entering EditSetup (`ChangeDest 11`) | makes DMX output unstable and forces a full fixture/preset type rebuild on exit |
-| Fixture layer numbering | starts at **2**; `number = index + 1`; there is no layer number 1 |
-| `getobj.amount` on a pool collection | **over-reports by one** (27 reported / 26 retrievable; 2 reported / 1 retrievable) |
+| Fixture layer numbering | ~~starts at 2, there is no layer 1~~ **wrong** — see Verified: there is an `Auto-Created 1`, missed because the probe scanned from index 1 |
+| `getobj.amount` on a pool collection | ~~over-reports by one~~ **misdiagnosed** — the child index base is 0 for these objects, so scanning from 1 loses the first entry and makes the count look one high. Also not a content count at all: `Root 13` reports one child whether the macro pool holds 0 or 58 macros |
 | Views | no Root number; addressable as `View 1`, `View 2`, … |
 
 ### Root pool map
@@ -100,11 +100,12 @@ carry numbers 2–27, so if they land on their original numbers the layer at 2
 afterwards is `(GZ) LED` — a real 36-fixture layer — and the macro would destroy
 it on every run.
 
-**Resolution: do not replicate the line.** The plugin reads the layer list
-before and after the import via `gma.show.getobj` and removes the scratch layer
-by identity (name plus fixture count), using whatever number it holds at that
-moment. This is correct under either answer, so the open question stops being a
-blocker.
+**Resolution at design time: do not replicate the line.** The plugin was to read
+the layer list before and after and match the scratch layer by identity.
+
+**Superseded by measurement** — see *Verified on console* below. Identity does
+not survive the import, and the answer to the question itself turned out to be
+that the macro's `Delete 2` deletes nothing at all.
 
 ## Design
 
@@ -130,11 +131,12 @@ blocker.
 ### Plugin 2 — Downgrade Import (runs on the low version)
 
 1. Warn that the show should be new and empty; abort on cancel.
-2. Read the layer list through LiveSetup and record every layer's identity.
+2. Read the layer list through LiveSetup and record it.
 3. Import each pool in dependency order, polling the destination pool's object
-   count until it settles (tolerating the off-by-one in `amount`).
-4. Re-read the layer list, find the scratch layer by identity, delete it by its
-   current number.
+   count until it settles. The count is read through the pool's object keyword;
+   the Root handle is not a content count.
+4. Re-read the layer list and remove the leftover scratch layer, identified as
+   the only layer holding no fixtures.
 5. Report per pool, and state explicitly whether the scratch layer was removed.
 
 ### Pools, in export order

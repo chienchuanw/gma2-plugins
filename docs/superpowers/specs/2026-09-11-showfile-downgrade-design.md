@@ -279,6 +279,27 @@ remove. So the descriptor is now always written, the `.lua` is copied when it
 can be found - the search sweeps `D:` through `Z:` as well as the console tree -
 and a missing source costs one file copy instead of the whole step.
 
+### The onPC folder is not always named after the full version
+
+Verified installations:
+
+```
+3.9.60 -> gma2_V_3.9.60      3.3.4 -> gma2_V_3.3.4
+3.7.0  -> gma2_V_3.7         3.9.0 -> gma2_V_3.9
+```
+
+A trailing `.0` is dropped. Deriving the folder name from the target version
+alone therefore produced `gma2_V_3.7.0` for a 3.7.0 target, which `mkdir`
+happily created next to the real `gma2_V_3.7` — so a run reported all 13 pools
+written and every byte of it went into a folder the console never reads. A
+silent success is the worst possible failure here.
+
+The rule is now used only to order two candidate names. Which one is real is
+settled by probing: a temp file is written into `<candidate>/importexport/`
+**without** creating anything, and the first candidate that accepts it wins. If
+neither does, the run aborts before exporting and says the target onPC does not
+appear to be installed. That self-corrects for any naming not seen here.
+
 ### Still open
 
 - `getobj.handle` returns nothing for `Image`, `UserProfile` and `User` on

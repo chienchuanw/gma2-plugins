@@ -110,6 +110,40 @@ eq(M.sibling_path(BASE, "3.3.4"),
    "C:/ProgramData/MA Lighting Technologies/grandma/gma2_V_3.3.4",
    "version segment substituted")
 
+-- onPC drops a trailing ".0" from its folder name: 3.7.0 installs as
+-- gma2_V_3.7, not gma2_V_3.7.0. Writing to the predicted name created an empty
+-- folder the console never reads, so both forms are offered and the caller
+-- probes for the one that exists.
+local forms = M.folder_versions("3.7.0")
+eq(forms[1], "3.7", "a trailing zero is dropped first")
+eq(forms[2], "3.7.0", "the full form is still offered as a fallback")
+eq(#forms, 2, "two forms")
+
+local forms60 = M.folder_versions("3.9.60")
+eq(forms60[1], "3.9.60", "a non-zero stream keeps the full form first")
+eq(forms60[2], "3.9", "the short form is the fallback")
+
+eq(M.folder_versions("3.3.4")[1], "3.3.4", "3.3.4 keeps its stream")
+eq(M.folder_versions("3.9.0")[1], "3.9", "3.9.0 installs as 3.9")
+eq(M.folder_versions("bad"), nil, "unparseable target has no folder form")
+
+local trees = M.sibling_candidates(BASE, "3.7.0")
+eq(#trees, 2, "two candidate trees")
+eq(trees[1], "C:/ProgramData/MA Lighting Technologies/grandma/gma2_V_3.7",
+   "the real 3.7.0 folder is tried first")
+eq(trees[2], "C:/ProgramData/MA Lighting Technologies/grandma/gma2_V_3.7.0",
+   "the literal form is the fallback")
+eq(M.sibling_candidates(BASE, "3.3.4")[1],
+   "C:/ProgramData/MA Lighting Technologies/grandma/gma2_V_3.3.4", "3.3.4 unchanged")
+eq(M.sibling_candidates("C:/no/version/here", "3.3.4"), nil, "no version segment")
+eq(M.sibling_candidates(BASE, "bad"), nil, "bad target rejected")
+
+-- sibling_path now takes a folder-name version, which may be two parts.
+eq(M.sibling_path(BASE, "3.7"),
+   "C:/ProgramData/MA Lighting Technologies/grandma/gma2_V_3.7",
+   "two-part replacement accepted")
+eq(M.sibling_path(BASE, "3"), nil, "a bare major is not a version")
+
 -- Only the last version-looking run is replaced; a show folder may hold a date.
 eq(M.sibling_path("D:/shows/2026.01.09/grandma/gma2_V_3.9.60", "3.3.4"),
    "D:/shows/2026.01.09/grandma/gma2_V_3.3.4",

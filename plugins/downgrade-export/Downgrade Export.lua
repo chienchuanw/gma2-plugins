@@ -86,12 +86,31 @@ function M.is_complete(xml)
     return type(xml) == "string" and string.find(xml, "</MA>%s*$") ~= nil
 end
 
+-- onPC does not always name its folder after the full version. Verified:
+--   3.9.60 -> gma2_V_3.9.60      3.3.4 -> gma2_V_3.3.4
+--   3.7.0  -> gma2_V_3.7         3.9.0 -> gma2_V_3.9
+-- so a trailing ".0" is dropped. Both forms are returned, most likely first,
+-- because the caller probes for the one that actually exists rather than
+-- trusting this rule - guessing wrong here silently fills a folder the console
+-- will never read.
+function M.folder_versions(target)
+    local maj, min, str = M.parse_version(target)
+    if not maj then return nil end
+    local short = maj .. "." .. min
+    local full = short .. "." .. str
+    if str == 0 then return { short, full } end
+    return { full, short }
+end
+
 -- The console's own path carries its version, so the other version's tree is
 -- the same string with that segment swapped. Only the LAST version-looking run
 -- is replaced: a folder further up could carry a date like 2026.01.09.
-function M.sibling_path(base, target)
+-- `replacement` is a folder-name version ("3.7"), not necessarily a full
+-- three-part version, so it is validated loosely on purpose.
+function M.sibling_path(base, replacement)
     if type(base) ~= "string" then return nil end
-    if not M.parse_version(target) then return nil end
+    if type(replacement) ~= "string" then return nil end
+    if not string.match(replacement, "^%d+%.%d+[%.%d]*$") then return nil end
 
     local s, e, init = nil, nil, 1
     while true do
@@ -100,7 +119,20 @@ function M.sibling_path(base, target)
         s, e, init = a, b, b + 1
     end
     if not s then return nil end
-    return string.sub(base, 1, s - 1) .. target .. string.sub(base, e + 1)
+    return string.sub(base, 1, s - 1) .. replacement .. string.sub(base, e + 1)
+end
+
+-- Every plausible tree for this target, in the order they should be tried.
+function M.sibling_candidates(base, target)
+    local forms = M.folder_versions(target)
+    if not forms then return nil end
+    local out = {}
+    for _, f in ipairs(forms) do
+        local path = M.sibling_path(base, f)
+        if path then out[#out + 1] = path end
+    end
+    if #out == 0 then return nil end
+    return out
 end
 
 -- Only "Export Root 13" was probed directly, so the folder each pool lands in is
@@ -216,6 +248,17 @@ local function write_file(path, content)
     if not f then return false, err end
     f:write(content)
     f:close()
+    return true
+end
+
+-- Can we write here as things stand? No mkdir, because creating the folder is
+-- exactly what must not happen while deciding which tree is the real one.
+local function dir_writable(path)
+    local probe = path .. "/_downgrade_probe.tmp"
+    local f = io.open(probe, "w")
+    if not f then return false end
+    f:close()
+    os.remove(probe)
     return true
 end
 
@@ -357,19 +400,37 @@ function Start()
             current, target))
     end
 
-    local out_base = M.sibling_path(base, target)
-    if not out_base then
+    local candidates = M.sibling_candidates(base, target)
+    if not candidates then
         return fail("Could not find a version to substitute in:\n\n" .. base)
     end
+
+    -- Pick the tree that already exists rather than the one the naming rule
+    -- predicts. onPC installs 3.7.0 as gma2_V_3.7, and mkdir would happily
+    -- create gma2_V_3.7.0 next to it and fill a folder nothing ever reads.
+    local out_base
+    for _, path in ipairs(candidates) do
+        if dir_writable(path .. "/importexport") then
+            out_base = path
+            break
+        end
+    end
+
+    if not out_base then
+        return fail(string.format(
+            "No grandMA2 onPC %s installation found.\n\nLooked for:\n%s\n\n" ..
+            "Launch onPC %s once so it creates its folders, then run this again.\n" ..
+            "Nothing was exported.",
+            target, table.concat(candidates, "\n"), target))
+    end
+    note("target tree: %s", out_base)
 
     -- Fail before exporting anything rather than after thirteen exports.
     for _, dir in ipairs({ M.SEARCH_DIRS[1], M.SEARCH_DIRS[2], M.SEARCH_DIRS[3], PLUGIN_DIR }) do
         local ok, err = ensure_dir(out_base .. string.gsub(dir, "/$", ""))
         if not ok then
             return fail(string.format(
-                "Cannot write into the %s tree.\n\n%s\n\n%s\n\n" ..
-                "Launch grandMA2 onPC %s once so it creates its folders, then retry.",
-                target, out_base .. dir, tostring(err), target))
+                "Cannot write into:\n\n%s\n\n%s", out_base .. dir, tostring(err)))
         end
     end
 

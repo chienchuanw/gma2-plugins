@@ -43,6 +43,8 @@ The first-party plugins maintained in this repository, all targeting grandMA2 **
 
 - **Repatch From Layer** -- Reads exported fixture-layer XML and writes a macro file that repatches the show to match it. Point it at one export or at a `...-LAYER-` prefix to sweep every layer at once; it produces two macros -- **Repatch**, which moves every fixture to the address the XML specifies, and **Restore**, which puts them back exactly where this console has them now. The plugin never touches the patch itself: you import the file, read the macro, and run it when you are ready. Fixtures are matched by Fixture ID, and multi-instance fixtures (e.g. ACME Tornado TB5) are handled from their start address.
 
+- **Downgrade Export** / **Downgrade Import** -- A pair that moves a showfile *down* a version, which grandMA2 otherwise cannot do. On the higher version, **Downgrade Export** exports all 13 pools, rewrites each file's version header to the target version, and writes the result straight into the lower version's onPC folder, installing **Downgrade Import** alongside it. On the lower version, **Downgrade Import** imports those pools into an empty show and then removes the scratch layer the import needs -- identifying it by name and contents rather than by a hardcoded number, so it cannot delete a real layer by mistake. Exports are awaited by watching for the closing `</MA>` rather than by a fixed delay. Both onPC versions must be installed on the same machine; for two separate consoles use the macros in [gma2-macros](https://github.com/chienchuanw/gma2-macros) instead.
+
 Download the latest prebuilt plugins (always the newest [release](https://github.com/chienchuanw/gma2-plugins/releases)):
 
 - [**Update Info** (`update-info.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/update-info.zip)
@@ -51,6 +53,8 @@ Download the latest prebuilt plugins (always the newest [release](https://github
 - [**Correct Position Offset** (`correct-position-offset.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/correct-position-offset.zip)
 - [**Clean Showfile** (`clean-showfile.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/clean-showfile.zip)
 - [**Repatch From Layer** (`repatch-from-layer.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/repatch-from-layer.zip)
+- [**Downgrade Export** (`downgrade-export.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/downgrade-export.zip)
+- [**Downgrade Import** (`downgrade-import.zip`)](https://github.com/chienchuanw/gma2-plugins/releases/latest/download/downgrade-import.zip)
 
 ## Getting Started
 
@@ -71,6 +75,14 @@ Each plugin is a pair of files: a `.lua` script and an `.xml` descriptor that th
 
 Run **Update Info** to read or change the selected cue's Info field; submit an empty value to clear it. Run **Append Info** to add a note to a cue's Info without overwriting what is already there. Run **Create Punch** with fixtures selected and an executor running a cue: it stores them at full into the current cue, asks for a fade time (empty defaults to 1 second), and writes a blackout cue just after the current one with those fixtures fading to 0. Run **Correct Position Offset** after re-focusing a rig into a corrected Position preset: enter the original and corrected preset numbers and it adds the per-instance Pan/Tilt difference into each fixture's offset, so existing cues using the original preset point correctly. Run **Clean Showfile** to recycle a show: it steps through the content pools, showing each pool's live object count and a Yes/No dialog; Yes marks a pool, No skips it. Review the summary and confirm once to wipe everything you selected (Cancel there aborts without deleting anything).
 
+**Downgrading a showfile** takes both plugins and both onPC versions installed on the same machine. Install **Downgrade Export** *and* **Downgrade Import** on the higher version, and launch the lower version once so it creates its folders. Then:
+
+1. On the higher version, open the show and run **Downgrade Export**. Enter the target version as three numbers, e.g. `3.3.4`. It exports 13 pools, rewrites each file's version header, copies the results into the lower version's folders, and installs **Downgrade Import** there. Run it offline: reading the setup tree can interrupt DMX output.
+2. Start the lower version, create a new empty show, and patch one scratch fixture on an ID and address that do not clash with the show being imported (e.g. Channel ID 34567 at DMX 234.56). The import needs a fixture layer to already exist.
+3. Run **Downgrade Import** in that show. It imports the 13 pools in dependency order, then removes the scratch layer. If it cannot identify that layer unambiguously it says so and leaves it alone for you to delete by hand.
+
+Layouts assigned into a view and default values set through presets do not survive a downgrade. That is inherent to the export/import route, not a limitation of these plugins.
+
 ## Project Structure
 
 ```text
@@ -80,10 +92,14 @@ gma2-plugins/
 │   ├── append-info/          #   Append Info.lua + Append Info.xml
 │   ├── create-punch/         #   Create Punch.lua + Create Punch.xml
 │   ├── correct-position-offset/  # Correct Position Offset.lua + .xml
-│   └── clean-showfile/       #   Clean Showfile.lua + Clean Showfile.xml
+│   ├── clean-showfile/       #   Clean Showfile.lua + Clean Showfile.xml
+│   ├── repatch-from-layer/   #   Repatch From Layer.lua + Repatch From Layer.xml
+│   ├── downgrade-export/     #   Downgrade Export.lua + Downgrade Export.xml
+│   └── downgrade-import/     #   Downgrade Import.lua + Downgrade Import.xml
 ├── third-party/              # Community plugins, kept for study and attribution
 │   ├── layoutfx/             #   extracted source + original archive
 │   ├── midi-twister/
+│   ├── patch-creator/
 │   ├── presets-to-offsets/
 │   └── recast-preset/
 ├── reference/                # Official and learning material

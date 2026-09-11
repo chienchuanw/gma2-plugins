@@ -42,6 +42,9 @@ local M = {}
 M.IMPORT_ORDER = {
     { key = "fixturetype",   file = "FixtureType",   setup = 3, at = 2 },
     { key = "fixturelayers", file = "FixtureLayers", setup = 4, at = 2 },
+    -- "Image", "UserProfile" and "User" did not resolve to a handle on 3.9.60,
+    -- so these three report "no count available" and fall back to a fixed
+    -- settle. Harmless, but the right keywords are still unknown.
     { key = "userimagepool", file = "UserImagePool", root = 8,  keyword = "Image" },
     { key = "effects",       file = "Effects",       root = 24, keyword = "Effect" },
     { key = "groups",        file = "Groups",        root = 22, keyword = "Group" },

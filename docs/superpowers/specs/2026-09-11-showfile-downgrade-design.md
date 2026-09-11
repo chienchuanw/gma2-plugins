@@ -265,10 +265,24 @@ Both outcomes are encoded as test cases in `tests/downgrade-import/test_logic.lu
   `Clean Showfile` already did.
 - The plugins folder path must be discovered, not assumed.
 
+### The plugin install step, resolved
+
+It failed because the design assumed both plugins live under
+`gma2_V_<version>/plugins/`. They do not: plugins are imported straight off a
+USB stick here, so nothing in the console tree holds a copy of the `.lua` at all.
+
+Reframed rather than patched. The `.lua` is already on that USB stick and can be
+imported on the target console from the same stick; the part that actually needs
+automating is the `.xml` descriptor, because it has to carry the target
+version's header and hand-editing that is the chore this plugin exists to
+remove. So the descriptor is now always written, the `.lua` is copied when it
+can be found - the search sweeps `D:` through `Z:` as well as the console tree -
+and a missing source costs one file copy instead of the whole step.
+
 ### Still open
 
-- Installing the import half from the export half failed on its first run and
-  the reason was not captured. The manual copy works, and the failure path now
-  prints every path it tried.
+- `getobj.handle` returns nothing for `Image`, `UserProfile` and `User` on
+  3.9.60, so those three pools report "no count available" and fall back to a
+  fixed settle. Cosmetic; the correct keywords are unknown.
 - Whether `ChangeDest 10` avoids Full Access Setup was never confirmed. The
   warning stays.

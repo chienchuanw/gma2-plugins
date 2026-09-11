@@ -380,9 +380,10 @@ function Start()
         note("  Delete it by hand from the patch once you have checked the show.")
     end
     note("")
-    note("Known losses, inherent to downgrading:")
-    note("  * layouts assigned into a view disappear (views are not exported)")
-    note("  * default values set through presets are lost")
+    note("Known losses, measured on a 331-fixture show:")
+    note("  * views are not exported at all (86 of them did not survive)")
+    note("    Layouts themselves come through intact; the views arranging them do not.")
+    note("  * default values set through presets are lost (inherited claim, unverified)")
     gma.echo("")
 
     call1(gma.gui.msgbox, PLUGIN_TITLE, string.format(

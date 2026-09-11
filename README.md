@@ -81,7 +81,7 @@ Run **Update Info** to read or change the selected cue's Info field; submit an e
 2. Start the lower version, create a new empty show, and patch one scratch fixture on an ID and address that do not clash with the show being imported (e.g. Channel ID 34567 at DMX 234.56). The import needs a fixture layer to already exist.
 3. Run **Downgrade Import** in that show. It imports the 13 pools in dependency order, then removes the scratch layer. If it cannot identify that layer unambiguously it says so and leaves it alone for you to delete by hand.
 
-Layouts assigned into a view and default values set through presets do not survive a downgrade. That is inherent to the export/import route, not a limitation of these plugins.
+Views do not survive a downgrade -- they are not exported by this route at all. Measured on a 331-fixture show, 86 views became the 4 a new show starts with, while every other pool matched exactly: 58 macros, 67 groups, 82 sequences, 290 effects, 117 presets, 10 layouts, 23 executor pages and all 331 fixtures across 27 layers. Layouts themselves come through intact; it is the views that arranged them that are lost. Default values set through presets are also reported to be lost, which this comparison did not measure. All of that is inherent to the export/import route, not a limitation of these plugins.
 
 ## Project Structure
 

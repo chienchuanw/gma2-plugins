@@ -198,3 +198,75 @@ loses this anyway".
   only the wording of the warning depends on it. v1 warns conservatively.
 - Whether the scratch dimmer is needed at all, or whether layers import into a
   completely empty show. v1 requires a layer to exist and says so.
+
+## Verified on console (2026-09-11)
+
+Source: `2026_lucy_v3.9.60_beijing_downgrade` on 3.9.60.50, 331 fixtures / 1087
+subfixtures. Target: a fresh show on 3.3.4.1 with one scratch dimmer. Snapshots
+taken with `sandbox/downgrade-audit/`.
+
+### Every exported pool matched exactly
+
+| pool | source | plugin result |
+|---|---|---|
+| Macros | 58 | 58 |
+| Groups | 67 | 67 |
+| Sequences | 82 | 82 |
+| Effects | 290 | 290 |
+| Presets | 117 (43/16/30/14/14 by type) | 117 (identical per type) |
+| Layouts | 10 | 10 |
+| ExecutorPages | 23 | 23 |
+| UserImagePool | 13 | 13 |
+| UserProfiles | 3 / 78 | 3 / 78 |
+| Users | 4 | 4 |
+| Timecodes | 0 | 0 |
+| fixture layers | 27 layers / 331 fixtures | same names, same per-layer counts, 331 |
+
+The only structural difference is one extra empty layer at number 2, which
+shifts the real layers up by one number. That is the emptied scratch layer.
+
+### What is lost
+
+- **Views: 86 → 4.** Total loss; the four are what a new show starts with. This
+  corrects the old macro README's claim that "layouts assigned with the view
+  will disappear": the Layouts pool comes through intact at 10, and it is the
+  views arranging them that do not survive.
+- **Channel count 7503 → 7495.** No fixture is missing — every layer's fixture
+  count matches — so this is a fixture type with a different channel count in
+  the 3.3.4 library, not lost patch.
+- Preset default values are reported lost by the original macro README. This
+  comparison did not measure them; the claim is carried forward unverified.
+
+### The `Delete 2` question, answered
+
+Running the old macros produced 27 layers with the scratch layer alive at
+number 28 and `(GZ) LED` intact at number 2 — so `Delete 2` deleted nothing at
+all. It is not safe-by-design, it is broken: the import *does* renumber, the
+real layers *do* land on 2 upwards, and a `Delete 2` that actually executed
+would have removed a 36-fixture production layer.
+
+### Why identity matching was abandoned
+
+The scratch layer came back renamed, emptied and renumbered, differently in each
+route: `test 2` → `test 28` under the macros, `test 2` → `Auto-Created 2` with
+zero fixtures under the plugin. `getobj.name` compounds this by appending the
+object's own number to the label, so even the name changes on renumbering.
+
+What held in both runs is that the leftover is the only layer with no fixtures.
+Both outcomes are encoded as test cases in `tests/downgrade-import/test_logic.lua`.
+
+### Corrections this run forced
+
+- `getobj.amount` on a pool collection is not a content count. `Root 13` reports
+  one child whether the macro pool holds nothing or 58 macros. Counting must go
+  through the object keyword, scanning from index 0 with `getobj.verify`, as
+  `Clean Showfile` already did.
+- The plugins folder path must be discovered, not assumed.
+
+### Still open
+
+- Installing the import half from the export half failed on its first run and
+  the reason was not captured. The manual copy works, and the failure path now
+  prints every path it tried.
+- Whether `ChangeDest 10` avoids Full Access Setup was never confirmed. The
+  warning stays.
